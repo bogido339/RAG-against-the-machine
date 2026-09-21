@@ -1,4 +1,4 @@
-MAIN := src/main.py
+MAIN := src
 
 .PHONY: install run debug clean lint lint-strict
 
@@ -6,7 +6,7 @@ install:
 	uv sync
 
 run:
-	uv run python $(MAIN)
+	uv run python -m $(MAIN)
 
 debug:
 	uv run python -m pdb $(MAIN)

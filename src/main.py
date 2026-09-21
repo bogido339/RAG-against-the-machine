@@ -12,6 +12,7 @@ class RagCLI:
         """
         Ingest data/raw/ and build the index under data/processed/.
         """
+        print("nnnn")
         indexer = BaseIndexer(max_chunk_size)
         indexer.rglob()
 
