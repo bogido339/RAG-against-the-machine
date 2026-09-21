@@ -1,32 +1,11 @@
-# ABOUTME: LLM SDK for local model inference using Hugging Face transformers.
-# ABOUTME: Provides Small_LLM_Model class for loading and running causal language models.
-
-import time
-from typing import Tuple
-
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenizer, PreTrainedModel, logging
-from huggingface_hub import hf_hub_download
-import os
 
 
 logging.set_verbosity_error()  # keep the console clean
 
 
-class Small_LLM_Model:
-    """Utility class wrapping a lightweight Hugging Face causal-LM for fast, low-memory experimentation.
-
-    Parameters
-    ----------
-    model_name: str, default="Qwen/Qwen3-0.6B"
-        Identifier of the model on the HF Hub.
-    device: str | None, default=None
-        Computation device. If *None* we automatically select ``mps`` when available on macOS,
-        ``cuda`` when available, otherwise we fall back to ``cpu``.
-    dtype: torch.dtype | None, default=None
-        Numerical precision. When using a GPU or MPS we default to ``float16`` to keep memory
-        usage reasonable; on CPU we keep ``float32`` for maximum compatibility.
-    """
+class Qwen:
 
     def __init__(
         self,
@@ -97,30 +76,3 @@ class Small_LLM_Model:
         # Get logits for the last token in the sequence for the batch (batch size 1)
         logits = out.logits[0, -1].tolist()
         return [float(x) for x in logits]
-
-
-    def get_path_to_vocab_file(self) -> str:
-        vocab_file_name = self._tokenizer.vocab_files_names.get('vocab_file', "vocab.json")
-        vocab_path = hf_hub_download(
-            repo_id=self._model_name,
-            filename=vocab_file_name
-        )
-        return vocab_path
-
-
-    def get_path_to_merges_file(self) -> str:
-        merges_file_name = self._tokenizer.vocab_files_names.get('merges_file', "merges.txt")
-        merges_path = hf_hub_download(
-            repo_id=self._model_name,
-            filename=merges_file_name
-        )
-        return merges_path
-
-
-    def get_path_to_tokenizer_file(self) -> str:
-        tokenizer_file_name = self._tokenizer.vocab_files_names.get('tokenizer_file', "tokenizer.json")
-        tokenizer_path = hf_hub_download(
-            repo_id=self._model_name,
-            filename=tokenizer_file_name
-        )
-        return tokenizer_path
