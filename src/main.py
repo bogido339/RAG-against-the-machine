@@ -2,7 +2,9 @@ import sys
 import fire
 from typing import Optional
 
-from src.indexer import BaseIndexer
+from src.chunker import BaseIndexer, Indexer
+from src.retriever import Retriever
+from src.generator import Generator
 
 
 class RagCLI:
@@ -12,15 +14,15 @@ class RagCLI:
         """
         Ingest data/raw/ and build the index under data/processed/.
         """
-        print("nnnn")
-        indexer = BaseIndexer(max_chunk_size)
-        indexer.rglob()
+        Indexer(BaseIndexer(max_chunk_size).build_index()).build_TF_IDF_vector()
 
     def search(self, query: str, k: int = 5) -> None:
         """
         Return the top-k sources for a single query.
         """
-        pass
+        retriver = Retriever()
+        top_k = retriver.search(query, k)
+        print(top_k)
 
     def search_dataset(self, dataset_path: str, save_directory: str, k: int = 5) -> None:
         """
@@ -32,7 +34,8 @@ class RagCLI:
         """
         Answer a single query using the retrieved context.
         """
-        pass
+        generator = Generator()
+        generator.answer(query, k)
 
     def answer_dataset(self, student_search_results_path: str, save_directory: str) -> None:
         """
@@ -45,6 +48,8 @@ class RagCLI:
         Report your own recall@k against a ground-truth dataset for local testing.
         """
         pass
+    def jj(self, number):
+        print("lsebar")
 
 
 def main() -> None:

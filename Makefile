@@ -1,4 +1,4 @@
-MAIN := src
+MAIN = src
 
 .PHONY: install run debug clean lint lint-strict
 

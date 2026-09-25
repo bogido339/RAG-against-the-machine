@@ -17,6 +17,7 @@ dependencies = [
     "torch>=2.2.0",
     "accelerate>=0.30.0",
     "sentence-transformers>=6.1.0",
+    "langchain-text-splitters>=1.1.2",
 ]
 
 [dependency-groups]
