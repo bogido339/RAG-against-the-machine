@@ -1,7 +1,6 @@
-from sklearn.metrics.pairwise import cosine_similarity
-import json
-import joblib
 from typing import List, Dict, Any
+import json
+import bm25s
 
 
 class Retriever:
@@ -9,30 +8,53 @@ class Retriever:
 
     def __init__(
         self, 
-        chunks_path: str = "data/chunks.json", 
-        vectorizer_path: str = "data/tfidf_vectorizer.pkl", 
-        matrix_path: str = "data/tfidf_matrix.pkl"
+        chunks_path: str = "data/processed/chunks.json", 
+        bm25_index: str = "data/bm25_index"
     ):
         with open(chunks_path, "r", encoding="utf-8") as f:
             self.chunks = json.load(f)
             
-        self.vectorizer = joblib.load(vectorizer_path)
-        self.tfidf_matrix = joblib.load(matrix_path)
+        self.retriever = bm25s.BM25.load(
+            bm25_index,
+            load_corpus=True
+        )
 
     def search(self, query: str, top_k: int = 3) -> List[Dict[str, Any]]:
         """Search the corpus for the most relevant chunks given a query."""
-        query_vector = self.vectorizer.transform([query])
-        
-        similarities = cosine_similarity(query_vector, self.tfidf_matrix).flatten()
-        
-        top_indices = similarities.argsort()[::-1][:top_k]
-        
-        results = []
-        for idx in top_indices:
-            results.append({
-                "score": float(similarities[idx]),
-                "file_path": self.chunks[idx]["file_path"],
-                "content": self.chunks[idx]["content"]
-            })
-            
-        return results
+        top_k_chunks = []
+
+        results, scores = self.retriever.retrieve(
+            bm25s.tokenize(query),
+            k=top_k
+        )
+        for res in results[0]:
+            for chunk in self.chunks:
+                if chunk["content"] == res["text"]:
+                    top_k_chunks.append(chunk)
+
+        return top_k_chunks
+    
+class DatasetRetriever():
+    def __init__(self):
+        self.retriever = Retriever()
+
+    def search_dataset(self, dataset_path, save_directory, k):
+        data = []
+
+        with open(dataset_path, "r", encoding="utf-8") as f:
+            dataset = json.load(f)
+
+            for query in dataset["rag_questions"]:
+                question_id = query["question_id"]
+                question = query["question"]
+                
+                dic = {
+                    "question_id": question_id,
+                    "question": question,
+                    "retrieved_sources": self.retriever.search(question, k)
+                }
+
+                data.append(dic)
+
+        with open(save_directory, "w", encoding=f"utf-8") as f:
+            json.dump(data, f, indent=4)
