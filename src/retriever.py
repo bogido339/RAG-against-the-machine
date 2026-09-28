@@ -40,6 +40,7 @@ class DatasetRetriever():
 
     def search_dataset(self, dataset_path, save_directory, k):
         data = []
+        res = {}
 
         with open(dataset_path, "r", encoding="utf-8") as f:
             dataset = json.load(f)
@@ -55,6 +56,8 @@ class DatasetRetriever():
                 }
 
                 data.append(dic)
+        res.update({"search_results": data})
+        res.update({"k": k})
 
         with open(save_directory, "w", encoding=f"utf-8") as f:
-            json.dump(data, f, indent=4)
+            json.dump(res, f, indent=4)

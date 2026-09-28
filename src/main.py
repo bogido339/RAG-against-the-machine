@@ -4,7 +4,7 @@ from typing import Optional
 
 from src.indexer import Indexer
 from src.retriever import Retriever, DatasetRetriever
-from src.generator import Generator
+from src.generator import Generator, DatasetGenerator
 
 
 class RagCLI:
@@ -37,22 +37,21 @@ class RagCLI:
         """
         Answer a single query using the retrieved context.
         """
-        generator = Generator()
-        generator.answer(query, k)
+        gen = Generator()
+        gen.answer(query, k)
 
     def answer_dataset(self, student_search_results_path: str, save_directory: str) -> None:
         """
         Generate answers for a dataset, producing a StudentSearchResultsAndAnswer JSON file.
         """
-        pass
+        gen = DatasetGenerator()
+        gen.answer_dataset(student_search_results_path, save_directory)
 
     def evaluate(self, student_search_results_path: str, dataset_path: str) -> None:
         """
         Report your own recall@k against a ground-truth dataset for local testing.
         """
         pass
-    def jj(self, number):
-        print("lsebar")
 
 
 def main() -> None:
