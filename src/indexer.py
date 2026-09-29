@@ -14,7 +14,7 @@ class Indexer:
 
     def __init__(self, max_chunk_size: int = 2000):
         self.max_chunk_size = max_chunk_size
-        self.source_directory = Path("resources/vllm-0.10.1")
+        self.source_directory = Path("data/raw/vllm-0.10.1")
         self.output_directory = Path("data/processed")
 
     def chunk_markdown(self, file_path: Path) -> List[Dict[str, Any]]:
@@ -140,7 +140,7 @@ class Indexer:
 
         retriever.index(bm25s.tokenize(corpus))
 
-        retriever.save("data/bm25_index")
+        retriever.save("data/processed/bm25_index")
 
 
     def build_index(self) -> None:
