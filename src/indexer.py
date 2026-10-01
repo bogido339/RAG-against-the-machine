@@ -9,10 +9,18 @@ from langchain_text_splitters import (
 import bm25s
 
 
+class IndexerError(Exception):
+    ...
+
+
 class Indexer:
     """Build the searchable index from the source codebase."""
 
     def __init__(self, max_chunk_size: int = 2000):
+
+        if not isinstance(max_chunk_size, int) or max_chunk_size < 1:
+            raise IndexerError("just positif intejer > 0")
+
         self.max_chunk_size = max_chunk_size
         self.source_directory = Path("data/raw/vllm-0.10.1")
         self.output_directory = Path("data/processed")

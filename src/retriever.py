@@ -1,88 +1,161 @@
-from typing import List, Dict, Any
 import json
+from pathlib import Path
+from typing import Any, Dict, List
 import bm25s
 
 
 class Retriever:
-    """Loads the saved BM25 index and performs similarity search."""
+    """Load a BM25 index and retrieve source locations."""
 
     def __init__(
-        self, 
-        chunks_path: str = "data/processed/chunks.json", 
-        bm25_index: str = "data/processed/bm25_index"
-    ):
-        self.chunks_path = chunks_path
-        self.bm25_index = bm25_index
-        
-        # try and except don't forget!!
-        self.retriever = bm25s.BM25.load(
-            self.bm25_index,
-            load_corpus=True
-        )
-
-    def search(self, query: str, top_k: int = 3) -> List[Dict[str, Any]]:
-        """Search the corpus for the most relevant chunks given a query."""
-        top_k_chunks = []
-
-        results, scores = self.retriever.retrieve(
-            bm25s.tokenize(query),
-            k=top_k
-        )
-
+        self,
+        chunks_path: str = "data/processed/chunks.json",
+        bm25_index: str = "data/processed/bm25_index",
+    ) -> None:
+        """Load chunks and the saved index."""
         try:
-            with open(self.chunks_path, "r", encoding="utf-8") as f:
-                chunks = json.load(f)
-                for res in results[0]:
-                    for chunk in chunks:
-                        if chunk["content"] == res["text"]:
-                            top_k_chunks.append(chunk)
-        except FileNotFoundError:
-            print('Wornnign: run first this commond: "uv run python -m src index 2000"')
-        except PermissionError:
-            print("Wornning: permission dinay write the commond: 'chmod 777 file'")
+            with open(chunks_path, "r", encoding="utf-8") as file:
+                self.chunks = json.load(file)
 
-        return top_k_chunks
+            if not isinstance(self.chunks, list) or not self.chunks:
+                raise ValueError("Chunks must be a non-empty JSON list.")
 
-    def topk_search(self, query, top_k):
+            self.chunks_by_text: Dict[str, Dict[str, Any]] = {}
+            for chunk in self.chunks:
+                self.chunks_by_text.setdefault(chunk["content"], chunk)
 
-        for chunk in self.search(query, top_k):
+            self.retriever = bm25s.BM25.load(
+                bm25_index,
+                load_corpus=True,
+            )
+        except FileNotFoundError as error:
+            raise ValueError(
+                "Index files are missing. Run: "
+                "uv run python -m src index --max_chunk_size 2000"
+            ) from error
+        except PermissionError as error:
+            raise ValueError(
+                "Permission denied while reading index files."
+            ) from error
+        except (json.JSONDecodeError, UnicodeError) as error:
+            raise ValueError("Cannot read chunks JSON.") from error
+        except (KeyError, TypeError) as error:
+            raise ValueError("Invalid chunk structure.") from error
+
+    def search(
+        self,
+        query: str,
+        top_k: int = 3,
+    ) -> List[Dict[str, Any]]:
+        """Return at most top_k unique source locations."""
+        if not query.strip():
+            raise ValueError("Query must not be empty.")
+        if top_k <= 0:
+            raise ValueError("k must be greater than zero.")
+
+        results, _ = self.retriever.retrieve(
+            bm25s.tokenize(query),
+            k=min(top_k, len(self.chunks)),
+        )
+
+        sources: List[Dict[str, Any]] = []
+        seen = set()
+
+        for result in results[0]:
+            chunk = self.chunks_by_text.get(result["text"])
+            if chunk is None:
+                raise ValueError(
+                    "Index and chunks do not match. Rebuild the index."
+                )
+
+            location = (
+                chunk["file_path"],
+                chunk["first_character_index"],
+                chunk["last_character_index"],
+            )
+            if location in seen:
+                continue
+
+            seen.add(location)
+            sources.append({
+                "file_path": location[0],
+                "first_character_index": location[1],
+                "last_character_index": location[2],
+            })
+
+            if len(sources) >= top_k:
+                break
+
+        return sources
+
+    def topk_search(self, query: str, top_k: int = 3) -> None:
+        """Print retrieved source locations."""
+        for source in self.search(query, top_k):
             print(
-                f"{chunk["file_path"]} [{chunk["first_character_index"]}:"
-                f"{chunk["last_character_index"]}]"
+                f"{source['file_path']} "
+                f"[{source['first_character_index']}:"
+                f"{source['last_character_index']}]"
             )
 
 
-class DatasetRetriever():
-    def __init__(self):
+class DatasetRetriever:
+    """Search a dataset and save student search results."""
+
+    def __init__(self) -> None:
+        """Initialize the retriever."""
         self.retriever = Retriever()
 
-    def search_dataset(self, dataset_path, save_directory, k):
-        data = []
-        res = {}
+    def search_dataset(
+        self,
+        dataset_path: str,
+        save_directory: str,
+        k: int = 5,
+    ) -> None:
+        """Save results inside the requested output directory."""
+        if k <= 0:
+            raise ValueError("k must be greater than zero.")
 
         try:
-            with open(dataset_path, "r", encoding="utf-8") as f:
-                dataset = json.load(f)
+            with open(dataset_path, "r", encoding="utf-8") as file:
+                dataset = json.load(file)
 
-                for query in dataset["rag_questions"]:
-                    question_id = query["question_id"]
-                    question = query["question"]
-                    
-                    dic = {
-                        "question_id": question_id,
-                        "question": question,
-                        "retrieved_sources": self.retriever.search(question, k)
-                    }
+            results = []
+            for query in dataset["rag_questions"]:
+                results.append({
+                    "question_id": query["question_id"],
+                    "question": query["question"],
+                    "retrieved_sources": self.retriever.search(
+                        query["question"], k
+                    ),
+                })
+        except FileNotFoundError as error:
+            raise ValueError(
+                f"Dataset does not exist: {dataset_path}"
+            ) from error
+        except PermissionError as error:
+            raise ValueError(
+                f"Cannot read dataset: {dataset_path}"
+            ) from error
+        except (json.JSONDecodeError, UnicodeError) as error:
+            raise ValueError("Cannot read dataset JSON.") from error
+        except (KeyError, TypeError) as error:
+            raise ValueError("Invalid dataset structure.") from error
 
-                    data.append(dic)
-        except:
-            print("wornning: try again")
+        output_directory = Path(save_directory)
+        output_path = output_directory / Path(dataset_path).name
 
-        res.update({"search_results": data})
-        res.update({"k": k})
-        
         try:
-            with open(save_directory, "w", encoding=f"utf-8") as f:
-                json.dump(res, f, indent=4)
-        except:
-            print("save_directory path not good input good path and try again")
+            output_directory.mkdir(parents=True, exist_ok=True)
+            with output_path.open("w", encoding="utf-8") as file:
+                json.dump(
+                    {"search_results": results, "k": k},
+                    file,
+                    indent=4,
+                    ensure_ascii=False,
+                )
+        except OSError as error:
+            raise ValueError(
+                f"Cannot save results to {output_path}: {error}"
+            ) from error
+
+        print(f"Saved student_search_results to {output_path}")

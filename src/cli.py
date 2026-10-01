@@ -1,6 +1,8 @@
 from src.indexer import Indexer
 from src.retriever import Retriever, DatasetRetriever
 from src.generator import Generator, DatasetGenerator
+from src.evaluator import Evaluator
+
 
 from src.models import (
     MinimalAnswer,
@@ -33,21 +35,42 @@ class RagCLI:
         dsr.search_dataset(dataset_path, save_directory, k)
 
     def answer(self, query: str, k: int = 5) -> None:
-        """
-        Answer a single query using the retrieved context.
-        """
-        gen = Generator()
-        gen.answer(query, k)
+        """Print an answer for one question."""
+        try:
+            print(Generator().answer(query, k))
+        except (OSError, UnicodeError, ValueError, RuntimeError) as error:
+            print(f"Error: {error}")
 
-    def answer_dataset(self, student_search_results_path: str, save_directory: str) -> None:
-        """
-        Generate answers for a dataset, producing a StudentSearchResultsAndAnswer JSON file.
-        """
-        gen = DatasetGenerator()
-        gen.answer_dataset(student_search_results_path, save_directory)
 
-    def evaluate(self, student_search_results_path: str, dataset_path: str) -> None:
-        """
-        Report your own recall@k against a ground-truth dataset for local testing.
-        """
-        pass
+    def answer_dataset(
+        self,
+        student_search_results_path: str,
+        save_directory: str,
+    ) -> None:
+        """Generate and save answers from existing search results."""
+        try:
+            DatasetGenerator().answer_dataset(
+                student_search_results_path,
+                save_directory,
+            )
+        except (OSError, UnicodeError, ValueError, RuntimeError) as error:
+            print(f"Error: {error}")
+
+    def evaluate(
+        self,
+        student_search_results_path: str,
+        dataset_path: str,
+    ) -> None:
+        """Print local recall scores against a ground-truth dataset."""
+        try:
+            evaluator = Evaluator()
+            scores = evaluator.evaluate(
+                student_search_results_path,
+                dataset_path,
+            )
+
+            for k, score in scores.items():
+                print(f"Recall@{k}: {score:.3f} ({score:.1%})")
+
+        except (OSError, UnicodeError, ValueError) as error:
+            print(f"Error: {error}")
