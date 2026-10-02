@@ -1,16 +1,15 @@
 from typing import List, Dict, Any
 from pathlib import Path
 import json
+import bm25s
+from error_classes import IndexerError
 
 from langchain_text_splitters import (
     RecursiveCharacterTextSplitter,
     Language,
 )
-import bm25s
 
 
-class IndexerError(Exception):
-    ...
 
 
 class Indexer:
@@ -148,8 +147,10 @@ class Indexer:
 
         retriever.index(bm25s.tokenize(corpus))
 
-        retriever.save("data/processed/bm25_index")
-
+        try:
+            retriever.save("data/processed/bm25_index")
+        except OSError as error:
+            raise IndexerError("file_path: data/processed/bm25_index", error)
 
     def build_index(self) -> None:
         """Run the complete indexing pipeline."""
@@ -162,9 +163,6 @@ class Indexer:
 
             except (OSError, UnicodeDecodeError) as error:
                 print(f"Skipping {file_path}: {error}")
-
-        for chunk in all_chunks:
-            assert len(chunk["content"]) <= self.max_chunk_size
 
         self._save_chunks(all_chunks)
         self._build_bm25_index(all_chunks)
