@@ -2,7 +2,7 @@ from typing import List, Dict, Any
 from pathlib import Path
 import json
 import bm25s
-from error_classes import IndexerError
+from src.error_classes import IndexerError
 
 from langchain_text_splitters import (
     RecursiveCharacterTextSplitter,
@@ -10,15 +10,15 @@ from langchain_text_splitters import (
 )
 
 
-
-
 class Indexer:
     """Build the searchable index from the source codebase."""
 
     def __init__(self, max_chunk_size: int = 2000):
 
-        if not isinstance(max_chunk_size, int) or max_chunk_size < 1:
-            raise IndexerError("just positif intejer > 0")
+        if not isinstance(max_chunk_size, int) or not 1 <= max_chunk_size <= 2000:
+            raise IndexerError(
+                "max_chunk_size must be a positive integer between 1 and 2000"
+            )
 
         self.max_chunk_size = max_chunk_size
         self.source_directory = Path("data/raw/vllm-0.10.1")
