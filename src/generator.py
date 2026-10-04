@@ -97,6 +97,9 @@ Answer:"""
 
         return self.generate(query, contents)
 
+    def print_answer(self, query: str, k: int) -> None:
+        print(self.answer(query, k))
+
 
 class DatasetGenerator:
     """Generate answers for a search-results dataset."""

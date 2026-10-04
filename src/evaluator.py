@@ -19,7 +19,7 @@ class Evaluator:
         self,
         student_search_results_path: str,
         dataset_path: str,
-    ) -> dict[int, float]:
+    ) -> None:
         """Load validated data and calculate recall at several cutoffs."""
         student_results = StudentSearchResults.model_validate_json(
             Path(student_search_results_path).read_text(encoding="utf-8")
@@ -89,7 +89,8 @@ class Evaluator:
                 )
             scores[k] = total / len(questions)
 
-        return scores
+        for k, score in scores.items():
+            print(f"Recall@{k}: {score:.3f} ({score:.1%})")
 
     def _validate_source(self, source: MinimalSource) -> None:
         """Reject invalid source locations."""

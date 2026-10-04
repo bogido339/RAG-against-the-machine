@@ -1,27 +1,34 @@
-from typing import List, Dict, Any
-from pathlib import Path
 import json
-import bm25s
-from src.error_classes import IndexerError
+import os
+from pathlib import Path
+from typing import Any, Dict, List
 
+import bm25s
 from langchain_text_splitters import (
-    RecursiveCharacterTextSplitter,
     Language,
+    RecursiveCharacterTextSplitter,
 )
+
+from src.error_classes import IndexerError
 
 
 class Indexer:
     """Build the searchable index from the source codebase."""
 
     def __init__(self, max_chunk_size: int = 2000):
-
         if not isinstance(max_chunk_size, int) or not 1 <= max_chunk_size <= 2000:
             raise IndexerError(
                 "max_chunk_size must be a positive integer between 1 and 2000"
             )
 
+        source_path = Path("data/raw/vllm-0.10.1")
+        if not source_path.exists():
+            raise IndexerError(f"Source directory not found: {source_path}")
+        if not os.access(source_path, os.R_OK):
+            raise IndexerError(f"Source directory does not have read permission: {source_path}")
+
         self.max_chunk_size = max_chunk_size
-        self.source_directory = Path("data/raw/vllm-0.10.1")
+        self.source_directory = source_path
         self.output_directory = Path("data/processed")
 
     def chunk_markdown(self, file_path: Path) -> List[Dict[str, Any]]:
@@ -79,13 +86,16 @@ class Indexer:
     ) -> List[Dict[str, Any]]:
         """Convert text chunks into indexed chunk records."""
         result = []
-        search_start = 0
+        current_pos = 0
+        overlap = int(self.max_chunk_size * 0.05)
 
         for chunk in chunks:
-            start_index = content.find(chunk, search_start)
+            start_index = content.find(chunk, current_pos)
 
             if start_index == -1:
-                continue
+                start_index = content.find(chunk)
+                if start_index == -1:
+                    continue
 
             end_index = start_index + len(chunk)
 
@@ -98,20 +108,22 @@ class Indexer:
                 }
             )
 
-            search_start = start_index + 1
+            current_pos = max(start_index + 1, end_index - overlap)
 
         return result
 
     def _find_files(self) -> List[Path]:
-        """Find all supported source files."""
+        """Find all supported source files safely."""
         supported_extensions = {".py", ".md", ".txt"}
 
-        return [
-            file_path
-            for file_path in self.source_directory.rglob("*")
-            if file_path.is_file()
-            and file_path.suffix in supported_extensions
-        ]
+        try:
+            return [
+                file_path
+                for file_path in self.source_directory.rglob("*")
+                if file_path.is_file() and file_path.suffix in supported_extensions
+            ]
+        except OSError as e:
+            raise IndexerError(f"Error traversing directory {self.source_directory}: {e}")
 
     def _chunk_file(self, file_path: Path) -> List[Dict[str, Any]]:
         """Choose the correct chunking strategy for a file."""
@@ -129,38 +141,44 @@ class Indexer:
     def _save_chunks(self, chunks: List[Dict[str, Any]]) -> None:
         """Save chunk metadata to disk."""
         self.output_directory.mkdir(parents=True, exist_ok=True)
-
         output_path = self.output_directory / "chunks.json"
 
-        with output_path.open("w", encoding="utf-8") as file:
-            json.dump(chunks, file, indent=4)
+        try:
+            with output_path.open("w", encoding="utf-8") as file:
+                json.dump(chunks, file, indent=4)
+        except OSError as e:
+            raise IndexerError(f"file_path: {output_path}, {e}")
 
-    def _build_bm25_index(
-        self,
-        chunks: List[Dict[str, Any]],
-    ) -> None:
+    def _build_bm25_index(self, chunks: List[Dict[str, Any]]) -> None:
         """Build and save the BM25 index."""
-
-        corpus = [chunk["content"] for chunk in chunks]
-        
-        retriever = bm25s.BM25(corpus=corpus)
-
-        retriever.index(bm25s.tokenize(corpus))
+        if not chunks:
+            raise IndexerError(
+                "Cannot build the BM25 index: no chunks were provided."
+            )
 
         try:
-            retriever.save("data/processed/bm25_index")
+            corpus = [chunk["content"] for chunk in chunks]
+            
+            retriever = bm25s.BM25()
+            corpus_tokens = bm25s.tokenize(corpus)
+            retriever.index(corpus_tokens)
+            retriever.save("data/processed/bm25_index", corpus=corpus)
+            
         except OSError as error:
-            raise IndexerError("file_path: data/processed/bm25_index", error)
+            raise IndexerError(f"file_path: data/processed/bm25_index, {error}")
 
     def build_index(self) -> None:
         """Run the complete indexing pipeline."""
         all_chunks = []
+        files = self._find_files()
 
-        for file_path in self._find_files():
+        if len(files) == 0:
+            raise IndexerError(f"Source directory is empty: {self.source_directory}")
+
+        for file_path in files:
             try:
                 chunks = self._chunk_file(file_path)
                 all_chunks.extend(chunks)
-
             except (OSError, UnicodeDecodeError) as error:
                 print(f"Skipping {file_path}: {error}")
 
