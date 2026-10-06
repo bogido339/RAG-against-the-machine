@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List
 import bm25s
+from src.error_classes import RetrieverError, DatasetRetrieverError
 
 
 class Retriever:
@@ -18,7 +19,7 @@ class Retriever:
                 self.chunks = json.load(file)
 
             if not isinstance(self.chunks, list) or not self.chunks:
-                raise ValueError("Chunks must be a non-empty JSON list.")
+                raise RetrieverError("Chunks must be a non-empty JSON list.")
 
             self.chunks_by_text: Dict[str, Dict[str, Any]] = {}
             for chunk in self.chunks:
@@ -28,19 +29,17 @@ class Retriever:
                 bm25_index,
                 load_corpus=True,
             )
-        except FileNotFoundError as error:
-            raise ValueError(
+        except FileNotFoundError:
+            raise RetrieverError(
                 "Index files are missing. Run: "
                 "uv run python -m src index --max_chunk_size 2000"
-            ) from error
-        except PermissionError as error:
-            raise ValueError(
-                "Permission denied while reading index files."
-            ) from error
-        except (json.JSONDecodeError, UnicodeError) as error:
-            raise ValueError("Cannot read chunks JSON.") from error
-        except (KeyError, TypeError) as error:
-            raise ValueError("Invalid chunk structure.") from error
+            )
+        except PermissionError:
+            raise RetrieverError("Permission denied while reading index files.")
+        except (json.JSONDecodeError, UnicodeError):
+            raise RetrieverError("Cannot read chunks JSON.")
+        except (KeyError, TypeError):
+            raise RetrieverError("Invalid chunk structure.")
 
     def search(
         self,
@@ -49,9 +48,9 @@ class Retriever:
     ) -> List[Dict[str, Any]]:
         """Return at most top_k unique source locations."""
         if not query.strip():
-            raise ValueError("Query must not be empty.")
-        if top_k <= 0:
-            raise ValueError("k must be greater than zero.")
+            raise RetrieverError("Query must not be empty.")
+        if not isinstance(top_k, int) or top_k <= 0:
+            raise RetrieverError("top_k must be a positive integer.")
 
         results, _ = self.retriever.retrieve(
             bm25s.tokenize(query),
@@ -64,7 +63,7 @@ class Retriever:
         for result in results[0]:
             chunk = self.chunks_by_text.get(result["text"])
             if chunk is None:
-                raise ValueError(
+                raise RetrieverError(
                     "Index and chunks do not match. Rebuild the index."
                 )
 
@@ -111,11 +110,11 @@ class DatasetRetriever:
         self,
         dataset_path: str,
         save_directory: str,
-        k: int = 5,
+        top_k: int = 5,
     ) -> None:
         """Save results inside the requested output directory."""
-        if k <= 0:
-            raise ValueError("k must be greater than zero.")
+        if not isinstance(top_k, int) or top_k <= 0:
+            raise RetrieverError("top_k must be a positive integer.")
 
         try:
             with open(dataset_path, "r", encoding="utf-8") as file:
@@ -127,21 +126,17 @@ class DatasetRetriever:
                     "question_id": query["question_id"],
                     "question": query["question"],
                     "retrieved_sources": self.retriever.search(
-                        query["question"], k
+                        query["question"], top_k
                     ),
                 })
-        except FileNotFoundError as error:
-            raise ValueError(
-                f"Dataset does not exist: {dataset_path}"
-            ) from error
-        except PermissionError as error:
-            raise ValueError(
-                f"Cannot read dataset: {dataset_path}"
-            ) from error
-        except (json.JSONDecodeError, UnicodeError) as error:
-            raise ValueError("Cannot read dataset JSON.") from error
-        except (KeyError, TypeError) as error:
-            raise ValueError("Invalid dataset structure.") from error
+        except FileNotFoundError:
+            raise DatasetRetrieverError(f"Dataset does not exist: {dataset_path}")
+        except PermissionError:
+            raise DatasetRetrieverError(f"Cannot read dataset: {dataset_path}")
+        except (json.JSONDecodeError, UnicodeError):
+            raise DatasetRetrieverError("Cannot read dataset JSON.")
+        except (KeyError, TypeError):
+            raise DatasetRetrieverError("Invalid dataset structure.")
 
         output_directory = Path(save_directory)
         output_path = output_directory / Path(dataset_path).name
@@ -150,13 +145,13 @@ class DatasetRetriever:
             output_directory.mkdir(parents=True, exist_ok=True)
             with output_path.open("w", encoding="utf-8") as file:
                 json.dump(
-                    {"search_results": results, "k": k},
+                    {"search_results": results, "k": top_k},
                     file,
                     indent=4,
                     ensure_ascii=False,
                 )
         except OSError as error:
-            raise ValueError(
+            raise DatasetRetrieverError(
                 f"Cannot save results to {output_path}: {error}"
             ) from error
 

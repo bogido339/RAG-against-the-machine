@@ -11,20 +11,16 @@ dependencies = [
     "fire>=0.6.0",
     "pydantic>=2.7.0",
     "tqdm>=4.66.0",
-    "rank-bm25>=0.2.2",
-    "scikit-learn>=1.4.0",
     "transformers>=4.40.0",
     "torch>=2.2.0",
-    "accelerate>=0.30.0",
-    "sentence-transformers>=6.1.0",
     "langchain-text-splitters>=1.1.2",
-    "bm25s>=0.3.11",
+    "bm25s>=0.3.11"
 ]
 
 [dependency-groups]
 dev = [
     "flake8>=7.0.0",
-    "mypy>=1.10.0",
+    "mypy>=1.10.0"
 ]
 
 [build-system]

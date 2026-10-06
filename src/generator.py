@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Any
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
-
 from src.retriever import Retriever
 
 
