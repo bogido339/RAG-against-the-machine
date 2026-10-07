@@ -6,7 +6,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from src.retriever import Retriever
 
 
-class QwenRAG:
+class Qwen:
     """Handle text generation using Qwen."""
 
     def __init__(self, model_name: str = "Qwen/Qwen3-0.6B"):
@@ -18,7 +18,7 @@ class QwenRAG:
         messages = [
             {
                 "role": "user",
-                "content": user_input,
+                "content": user_input
             }
         ]
 
@@ -29,19 +29,16 @@ class QwenRAG:
             enable_thinking=False
         )
 
-        inputs = self.tokenizer(
-            text,
-            return_tensors="pt",
-        )
+        inputs = self.tokenizer(text, return_tensors="pt")
 
         response_ids = self.model.generate(
             **inputs,
-            max_new_tokens=1024,
+            max_new_tokens=1024
         )[0][len(inputs.input_ids[0]):]
 
         return self.tokenizer.decode(
             response_ids,
-            skip_special_tokens=True,
+            skip_special_tokens=True
         )
 
 
@@ -49,13 +46,10 @@ class Generator:
     """Generate answers using retrieved context."""
 
     def __init__(self):
-        self.model = QwenRAG()
+        self.model = Qwen()
+        self.retriever = Retriever()
 
-    def get_prompt(
-        self,
-        query: str,
-        top_chunks: list[str],
-    ) -> str:
+    def get_prompt(self, query: str, top_chunks: list[str]) -> str:
         """Build the RAG prompt."""
         context = "\n\n".join(top_chunks)
 
@@ -69,32 +63,19 @@ Question:
 
 Answer:"""
 
-    def generate(
-        self,
-        query: str,
-        chunks: list[str],
-    ) -> str:
-        """Generate an answer from already retrieved chunks."""
-        prompt = self.get_prompt(query, chunks)
-
-        return self.model.generate_response(prompt)
-
-    def answer(
-        self,
-        query: str,
-        k: int = 5,
-    ) -> str:
+    def answer(self, query: str, k: int = 5) -> str:
         """Retrieve relevant chunks and answer one question."""
-        retriever = Retriever()
 
-        top_chunks = retriever.search(query, k)
+        top_chunks = self.retriever.search(query, k)
 
         contents = [
             chunk["content"]
             for chunk in top_chunks
         ]
 
-        return self.generate(query, contents)
+        prompt = self.get_prompt(query, contents)
+
+        return self.model.generate_response(prompt)
 
     def print_answer(self, query: str, k: int) -> None:
         print(self.answer(query, k))
@@ -107,9 +88,7 @@ class DatasetGenerator:
         self.generator = Generator()
 
     def answer_dataset(
-        self,
-        student_search_results_path: str,
-        save_directory: str,
+            self, student_search_results_path: str, save_directory: str
     ) -> None:
         """Generate answers from existing search results."""
 
@@ -127,35 +106,25 @@ class DatasetGenerator:
 
             chunks = self._load_chunks(retrieved_sources)
 
-            answer = self.generator.generate(
-                question,
-                chunks,
-            )
+            answer = self.generator.generate(question, chunks)
 
             results.append(
                 {
                     "question_id": question_id,
                     "question": question,
                     "retrieved_sources": retrieved_sources,
-                    "answer": answer,
+                    "answer": answer
                 }
             )
 
         output = {
             "search_results": results,
-            "k": data["k"],
+            "k": data["k"]
         }
 
-        self._save(
-            output,
-            input_path,
-            Path(save_directory),
-        )
+        self._save(output, input_path, Path(save_directory))
 
-    def _load_chunks(
-        self,
-        sources: list[dict[str, Any]],
-    ) -> list[str]:
+    def _load_chunks(self,sources: list[dict[str, Any]]) -> list[str]:
         """Load source text using its character positions."""
         chunks = []
 
@@ -172,25 +141,14 @@ class DatasetGenerator:
         return chunks
 
     def _save(
-        self,
-        data: dict[str, Any],
-        input_path: Path,
-        save_directory: Path,
+            self, data: dict[str, Any], input_path: Path, save_directory: Path
     ) -> None:
         """Save generated dataset using the original filename."""
-        save_directory.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
+        save_directory.mkdir(parents=True, exist_ok=True)
 
         output_path = save_directory / input_path.name
 
         with output_path.open("w", encoding="utf-8") as file:
-            json.dump(
-                data,
-                file,
-                indent=4,
-                ensure_ascii=False,
-            )
+            json.dump(data, file, indent=4, ensure_ascii=False)
 
         print(f"Saved results to {output_path}")

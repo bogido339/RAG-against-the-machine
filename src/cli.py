@@ -24,8 +24,11 @@ class RagCLI:
         retriver = Retriever()
         retriver.topk_search(query, k)
 
-    def search_dataset(self, dataset_path: str, save_directory: str, k: int = 5) -> None:
-        """Run search over a whole dataset and write a StudentSearchResults JSON file."""
+    def search_dataset(
+            self, dataset_path: str, save_directory: str, k: int = 5
+    ) -> None:
+        """Run search over a whole dataset and write
+        a StudentSearchResults JSON file."""
         dsr = DatasetRetriever()
         dsr.search_dataset(dataset_path, save_directory, k)
 
@@ -34,12 +37,15 @@ class RagCLI:
         gen = Generator()
         gen.print_answer(query, k)
 
-    def answer_dataset(self, student_search_results_path: str, save_directory: str) -> None:
+    def answer_dataset(
+            self, student_search_results_path: str, save_directory: str
+    ) -> None:
         """Generate and save answers from existing search results."""
         datasetgen = DatasetGenerator()
         datasetgen.answer_dataset(student_search_results_path, save_directory)
 
-    def evaluate(self, student_search_results_path: str, dataset_path: str) -> None:
+    def evaluate(
+            self, student_search_results_path: str, dataset_path: str) -> None:
         """Print local recall scores against a ground-truth dataset."""
         evaluator = Evaluator()
         evaluator.evaluate(student_search_results_path, dataset_path)
