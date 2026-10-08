@@ -45,7 +45,8 @@ class RagCLI:
         datasetgen.answer_dataset(student_search_results_path, save_directory)
 
     def evaluate(
-            self, student_search_results_path: str, dataset_path: str) -> None:
+            self, student_search_results_path: str, dataset_path: str
+    ) -> None:
         """Print local recall scores against a ground-truth dataset."""
         evaluator = Evaluator()
         evaluator.evaluate(student_search_results_path, dataset_path)

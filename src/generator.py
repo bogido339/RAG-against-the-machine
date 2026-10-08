@@ -78,6 +78,7 @@ Answer:"""
         return self.model.generate_response(prompt)
 
     def print_answer(self, query: str, k: int) -> None:
+        """print answer one question."""
         print(self.answer(query, k))
 
 

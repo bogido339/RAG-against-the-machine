@@ -14,7 +14,8 @@ dependencies = [
     "transformers>=4.40.0",
     "torch>=2.2.0",
     "langchain-text-splitters>=1.1.2",
-    "bm25s>=0.3.11"
+    "bm25s>=0.3.11",
+    "pygame>=2.6.1",
 ]
 
 [dependency-groups]
