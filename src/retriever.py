@@ -71,7 +71,6 @@ class Retriever:
                 chunk["file_path"],
                 chunk["first_character_index"],
                 chunk["last_character_index"],
-                chunk["content"]
             )
             if location in seen:
                 continue
@@ -81,7 +80,6 @@ class Retriever:
                 "file_path": location[0],
                 "first_character_index": location[1],
                 "last_character_index": location[2],
-                "content": location[3]
             })
 
             if len(sources) >= top_k:

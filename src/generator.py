@@ -63,7 +63,7 @@ Question:
 
 Answer:"""
 
-    def generate(self, question: str, chunks: List[Dict]) -> str:
+    def generate(self, query: str, chunks: List[Dict]) -> str:
         contents = [
             chunk["content"]
             for chunk in chunks
@@ -97,11 +97,31 @@ class DatasetGenerator:
         with input_path.open("r", encoding="utf-8") as file:
             data = json.load(file)
         
+        results = []
+
         for query in data["search_results"]:
             question_id = query["question_id"]
             question = query["question"]
-            chunks = self._load_chunks(query["retrieved_sources"])
+            retrieved_sources = query["retrieved_sources"]
+
+            chunks = self._load_chunks(retrieved_sources)
             answer = self.generator.generate(question, chunks)
+
+            results.append(
+                {
+                    "question_id": question_id,
+                    "question": question,
+                    "retrieved_sources": retrieved_sources,
+                    "answer": answer
+                }
+            )
+
+        output = {
+            "search_results": results,
+            "k": data["k"]
+        }
+
+        self._save(output, input_path, Path(save_directory))
 
     def _load_chunks(self, sources: List[Dict]) -> List[str]:
         chunks = []
@@ -113,5 +133,16 @@ class DatasetGenerator:
 
             with chunk_path.open("r", encoding="utf-8") as file:
                 chunks.appen(file[start:end])
-                
 
+        return chunks
+    
+    def _save(self, data: Dict, input_path: Path, save_directory: Path) -> None:
+        """Save generated dataset in save_directory."""
+        save_directory.mkdir(parents=True, exist_ok=True)
+
+        output_path = save_directory / input_path.name
+
+        with output_path.open("w", encoding="tlf-8") as file:
+            json.dump(data, file, inding=4, ensure_ascii=False)
+
+        print(f"Saved results to {output_path}")
