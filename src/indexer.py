@@ -16,7 +16,10 @@ class Indexer:
     """Build the searchable index from the source codebase."""
 
     def __init__(self, max_chunk_size: int = 2000):
-        if not isinstance(max_chunk_size, int) or not 1 <= max_chunk_size <= 2000:
+        if(
+            not isinstance(max_chunk_size, int)
+            or not 1 <= max_chunk_size <= 2000
+        ):
             raise IndexerError(
                 "max_chunk_size must be a positive integer between 1 and 2000"
             )
@@ -25,7 +28,10 @@ class Indexer:
         if not source_path.exists():
             raise IndexerError(f"Source directory not found: {source_path}")
         if not os.access(source_path, os.R_OK):
-            raise IndexerError(f"Source directory does not have read permission: {source_path}")
+            raise IndexerError(
+                f"Source directory does not have read permission: "
+                f"{source_path}"
+            )
 
         self.max_chunk_size = max_chunk_size
         self.source_directory = source_path
@@ -120,10 +126,14 @@ class Indexer:
             return [
                 file_path
                 for file_path in self.source_directory.rglob("*")
-                if file_path.is_file() and file_path.suffix in supported_extensions
+                if(
+                    file_path.is_file()
+                    and file_path.suffix in supported_extensions
+                )
             ]
         except OSError as e:
-            raise IndexerError(f"Error traversing directory {self.source_directory}: {e}")
+            raise IndexerError(
+                f"Error traversing directory {self.source_directory}: {e}")
 
     def _chunk_file(self, file_path: Path) -> List[Dict[str, Any]]:
         """Choose the correct chunking strategy for a file."""
@@ -165,7 +175,8 @@ class Indexer:
             retriever.save("data/processed/bm25_index", corpus=corpus)
             
         except OSError as error:
-            raise IndexerError(f"file_path: data/processed/bm25_index, {error}")
+            raise IndexerError(
+                f"file_path: data/processed/bm25_index, {error}")
 
     def build_index(self) -> None:
         """Run the complete indexing pipeline."""
@@ -173,7 +184,8 @@ class Indexer:
         files = self._find_files()
 
         if len(files) == 0:
-            raise IndexerError(f"Source directory is empty: {self.source_directory}")
+            raise IndexerError(
+                f"Source directory is empty: {self.source_directory}")
 
         for file_path in files:
             try:

@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, List, Dict
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from src.retriever import Retriever
@@ -63,23 +63,23 @@ Question:
 
 Answer:"""
 
-    def answer(self, query: str, k: int = 5) -> str:
-        """Retrieve relevant chunks and answer one question."""
-
-        top_chunks = self.retriever.search(query, k)
-
+    def generate(self, question: str, chunks: List[Dict]) -> str:
         contents = [
             chunk["content"]
-            for chunk in top_chunks
+            for chunk in chunks
         ]
 
         prompt = self.get_prompt(query, contents)
 
         return self.model.generate_response(prompt)
 
-    def print_answer(self, query: str, k: int) -> None:
-        """print answer one question."""
-        print(self.answer(query, k))
+
+    def answer(self, query: str, k: int = 5) -> str:
+        """Retrieve relevant chunks and answer one question."""
+
+        top_chunks = self.retriever.search(query, k)
+
+        print(self.generate(query, top_chunks))
 
 
 class DatasetGenerator:
@@ -92,64 +92,26 @@ class DatasetGenerator:
             self, student_search_results_path: str, save_directory: str
     ) -> None:
         """Generate answers from existing search results."""
-
         input_path = Path(student_search_results_path)
 
         with input_path.open("r", encoding="utf-8") as file:
             data = json.load(file)
-
-        results = []
-
+        
         for query in data["search_results"]:
             question_id = query["question_id"]
             question = query["question"]
-            retrieved_sources = query["retrieved_sources"]
-
-            chunks = self._load_chunks(retrieved_sources)
-
+            chunks = self._load_chunks(query["retrieved_sources"])
             answer = self.generator.generate(question, chunks)
 
-            results.append(
-                {
-                    "question_id": question_id,
-                    "question": question,
-                    "retrieved_sources": retrieved_sources,
-                    "answer": answer
-                }
-            )
-
-        output = {
-            "search_results": results,
-            "k": data["k"]
-        }
-
-        self._save(output, input_path, Path(save_directory))
-
-    def _load_chunks(self,sources: list[dict[str, Any]]) -> list[str]:
-        """Load source text using its character positions."""
+    def _load_chunks(self, sources: List[Dict]) -> List[str]:
         chunks = []
 
         for source in sources:
-            file_path = Path(source["file_path"])
+            chunk_path = Path(source["file_path"])
+            start = source["start_index"]
+            end = source["end_index"]
 
-            content = file_path.read_text(encoding="utf-8")
+            with chunk_path.open("r", encoding="utf-8") as file:
+                chunks.appen(file[start:end])
+                
 
-            start = source["first_character_index"]
-            end = source["last_character_index"]
-
-            chunks.append(content[start:end])
-
-        return chunks
-
-    def _save(
-            self, data: dict[str, Any], input_path: Path, save_directory: Path
-    ) -> None:
-        """Save generated dataset using the original filename."""
-        save_directory.mkdir(parents=True, exist_ok=True)
-
-        output_path = save_directory / input_path.name
-
-        with output_path.open("w", encoding="utf-8") as file:
-            json.dump(data, file, indent=4, ensure_ascii=False)
-
-        print(f"Saved results to {output_path}")

@@ -35,7 +35,7 @@ class RagCLI:
     def answer(self, query: str, k: int = 5) -> None:
         """Print an answer for one question."""
         gen = Generator()
-        gen.print_answer(query, k)
+        gen.answer(query, k)
 
     def answer_dataset(
             self, student_search_results_path: str, save_directory: str
