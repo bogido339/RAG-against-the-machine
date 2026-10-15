@@ -24,17 +24,8 @@ class Indexer:
                 "max_chunk_size must be a positive integer between 1 and 2000"
             )
 
-        source_path = Path("data/raw/vllm-0.10.1")
-        if not source_path.exists():
-            raise IndexerError(f"Source directory not found: {source_path}")
-        if not os.access(source_path, os.R_OK):
-            raise IndexerError(
-                f"Source directory does not have read permission: "
-                f"{source_path}"
-            )
-
         self.max_chunk_size = max_chunk_size
-        self.source_directory = source_path
+        self.source_directory = Path("data/raw/vllm-0.10.1")
         self.output_directory = Path("data/processed")
 
     def chunk_markdown(self, file_path: Path) -> List[Dict[str, Any]]:
@@ -122,18 +113,27 @@ class Indexer:
         """Find all supported source files safely."""
         supported_extensions = {".py", ".md", ".txt"}
 
-        try:
-            return [
-                file_path
-                for file_path in self.source_directory.rglob("*")
-                if(
-                    file_path.is_file()
-                    and file_path.suffix in supported_extensions
-                )
-            ]
-        except OSError as e:
+        if not self.source_directory.exists():
+            raise IndexerError(f"Source directory not found: {self.source_directory}")
+        
+        if not self.source_directory.is_dir():
             raise IndexerError(
-                f"Error traversing directory {self.source_directory}: {e}")
+                f"Path is not a directory: {self.source_directory}"
+            )
+
+        if not os.access(self.source_directory, os.R_OK):
+            raise IndexerError(
+                f"Source directory does not have read permission: "
+                f"{self.source_directory}"
+            )
+        
+        found_files = []
+
+        for file_path in self.source_directory.rglob("*"):
+            if file_path.is_file() and file_path.suffix.lower() in supported_extensions:
+                found_files.append(file_path)
+
+        return found_files
 
     def _chunk_file(self, file_path: Path) -> List[Dict[str, Any]]:
         """Choose the correct chunking strategy for a file."""
