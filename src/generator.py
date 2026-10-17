@@ -64,15 +64,10 @@ Question:
 Answer:"""
 
     def generate(self, query: str, chunks: List[Dict]) -> str:
-        contents = [
-            chunk["content"]
-            for chunk in chunks
-        ]
 
-        prompt = self.get_prompt(query, contents)
+        prompt = self.get_prompt(query, chunks)
 
         return self.model.generate_response(prompt)
-
 
     def answer(self, query: str, k: int = 5) -> str:
         """Retrieve relevant chunks and answer one question."""
@@ -100,6 +95,7 @@ class DatasetGenerator:
         results = []
 
         for query in data["search_results"]:
+
             question_id = query["question_id"]
             question = query["question"]
             retrieved_sources = query["retrieved_sources"]
@@ -127,12 +123,14 @@ class DatasetGenerator:
         chunks = []
 
         for source in sources:
-            chunk_path = Path(source["file_path"])
-            start = source["start_index"]
-            end = source["end_index"]
+            file_path = Path(source["file_path"])
 
-            with chunk_path.open("r", encoding="utf-8") as file:
-                chunks.appen(file[start:end])
+            content = file_path.read_text(encoding="utf-8")
+    
+            start = source["first_character_index"]
+            end = source["last_character_index"]
+
+            chunks.append(content[start:end])
 
         return chunks
     
@@ -142,7 +140,7 @@ class DatasetGenerator:
 
         output_path = save_directory / input_path.name
 
-        with output_path.open("w", encoding="tlf-8") as file:
-            json.dump(data, file, inding=4, ensure_ascii=False)
+        with output_path.open("w", encoding="utf-8") as file:
+            json.dump(data, file, indent=4, ensure_ascii=False)
 
         print(f"Saved results to {output_path}")

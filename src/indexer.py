@@ -173,6 +173,7 @@ class Indexer:
             corpus_tokens = bm25s.tokenize(corpus)
             retriever.index(corpus_tokens)
             retriever.save("data/processed/bm25_index", corpus=corpus)
+            print(f"Ingestion complete! Indices saved under {"data/processed"}")
             
         except OSError as error:
             raise IndexerError(

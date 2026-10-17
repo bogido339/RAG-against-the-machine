@@ -151,6 +151,6 @@ class DatasetRetriever:
         except OSError as error:
             raise DatasetRetrieverError(
                 f"Cannot save results to {output_path}: {error}"
-            ) from error
+            )
 
         print(f"Saved student_search_results to {output_path}")
