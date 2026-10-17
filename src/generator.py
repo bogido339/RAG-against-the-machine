@@ -94,11 +94,12 @@ class DatasetGenerator:
         
         results = []
 
-        for query in data["search_results"]:
+        for query in data["search_results"][:1]:
 
             question_id = query["question_id"]
             question = query["question"]
             retrieved_sources = query["retrieved_sources"]
+            print("the len of retrieved_sources is:", len(retrieved_sources))
 
             chunks = self._load_chunks(retrieved_sources)
             answer = self.generator.generate(question, chunks)
