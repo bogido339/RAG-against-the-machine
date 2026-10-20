@@ -4,6 +4,8 @@ from typing import Any, List, Dict
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from src.retriever import Retriever
+from src.error_classes import GeneratorErrro, DatasetGeneratorError
+from tqdm import tqdm
 
 
 class Qwen:
@@ -88,18 +90,33 @@ class DatasetGenerator:
     ) -> None:
         """Generate answers from existing search results."""
         input_path = Path(student_search_results_path)
+        
+        if not input_path.exists():
+            raise DatasetGeneratorError(f"The search results file does not exist: {input_path}")
+            
+        try:
+            with input_path.open("r", encoding="utf-8") as file:
+                content = file.read().strip()
+                if not content:
+                    raise DatasetGeneratorError(f"The search results file is empty (0 bytes): {input_path}")
+                data = json.loads(content)
+        except PermissionError as e:
+            raise DatasetGeneratorError(
+                f"Permission denied: You do not have read access to '{input_path}'. Check file permissions."
+            )
+        except json.decoder.JSONDecodeError as e:
+            raise DatasetGeneratorError(
+                f"Failed to parse JSON from '{input_path}'. The file contains invalid JSON. Details: {e}"
+            )
 
-        with input_path.open("r", encoding="utf-8") as file:
-            data = json.load(file)
         
         results = []
 
-        for query in data["search_results"][:1]:
+        for query in tqdm(data["search_results"][:5]):
 
             question_id = query["question_id"]
             question = query["question"]
             retrieved_sources = query["retrieved_sources"]
-            print("the len of retrieved_sources is:", len(retrieved_sources))
 
             chunks = self._load_chunks(retrieved_sources)
             answer = self.generator.generate(question, chunks)
@@ -134,14 +151,22 @@ class DatasetGenerator:
             chunks.append(content[start:end])
 
         return chunks
-    
-    def _save(self, data: Dict, input_path: Path, save_directory: Path) -> None:
-        """Save generated dataset in save_directory."""
-        save_directory.mkdir(parents=True, exist_ok=True)
+
+    def _save(
+        self, data: Dict[str, Any], input_path: Path, save_directory: Path
+    ) -> None:
+        """Save generated dataset to a JSON file."""
 
         output_path = save_directory / input_path.name
 
-        with output_path.open("w", encoding="utf-8") as file:
-            json.dump(data, file, indent=4, ensure_ascii=False)
+        try:
+            save_directory.mkdir(parents=True, exist_ok=True)
 
-        print(f"Saved results to {output_path}")
+            with output_path.open("w", encoding="utf-8") as file:
+                json.dump(data, file, indent=4, ensure_ascii=False)
+
+            print(f"Saved results to {output_path}")
+
+        except OSError as e:
+            raise DatasetGeneratorError(
+                f"Failed to save dataset to '{output_path}': {e}")

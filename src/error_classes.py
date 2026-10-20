@@ -1,26 +1,26 @@
-class ClassError(Exception):
+class RagError(Exception):
     ...
 
 
-class IndexerError(ClassError):
+class IndexerError(RagError):
     ...
 
 
-class RetrieverError(ClassError):
+class RetrieverError(RagError):
     ...
 
 
-class DatasetRetrieverError(ClassError):
+class DatasetRetrieverError(RagError):
     ...
 
 
-class GeneratorErrro(ClassError):
+class GeneratorErrro(RagError):
     ...
 
 
-class DatasetGeneratorErrro(ClassError):
+class DatasetGeneratorError(RagError):
     ...
 
 
-class EvaluatorError(ClassError):
+class EvaluatorError(RagError):
     ...

@@ -1,0 +1,290 @@
+{
+    "search_results": [
+        {
+            "question_id": "17526382-7764-4120-b5e8-2d3726b8a4da",
+            "question": "What HTTP endpoint is used to dynamically load a LoRA adapter in vLLM?",
+            "retrieved_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/lora.md",
+                    "first_character_index": 4695,
+                    "last_character_index": 6098
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/plugins/lora_resolvers/README.md",
+                    "first_character_index": 0,
+                    "last_character_index": 829
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/examples/others/tensorize_vllm_model.py",
+                    "first_character_index": 3857,
+                    "last_character_index": 4456
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/lora.md",
+                    "first_character_index": 6100,
+                    "last_character_index": 8080
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/lora.md",
+                    "first_character_index": 4075,
+                    "last_character_index": 4693
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/entrypoints/openai/serving_models.py",
+                    "first_character_index": 10634,
+                    "last_character_index": 11280
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/model_loader/tensorizer.py",
+                    "first_character_index": 6905,
+                    "last_character_index": 8825
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/lora.md",
+                    "first_character_index": 2072,
+                    "last_character_index": 4069
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/entrypoints/openai/serving_models.py",
+                    "first_character_index": 8712,
+                    "last_character_index": 10620
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/lora.md",
+                    "first_character_index": 0,
+                    "last_character_index": 1874
+                }
+            ],
+            "answer": "The HTTP endpoint used to dynamically load a LoRA adapter in vLLM is the `/v1/load_lora_adapter` endpoint."
+        },
+        {
+            "question_id": "cc83c230-099f-4c11-aeab-8c09715c5942",
+            "question": "What command can be used to evaluate the accuracy of a quantized model using lm_eval with vLLM?",
+            "retrieved_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/quantization/int4.md",
+                    "first_character_index": 3387,
+                    "last_character_index": 3972
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/quantization/int8.md",
+                    "first_character_index": 2439,
+                    "last_character_index": 4408
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/quantization/fp8.md",
+                    "first_character_index": 3163,
+                    "last_character_index": 4563
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/quantization/quark.md",
+                    "first_character_index": 6638,
+                    "last_character_index": 8031
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/tests/tpu/test_quantization_accuracy.py",
+                    "first_character_index": 0,
+                    "last_character_index": 1602
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/examples/offline_inference/openai_batch/README.md",
+                    "first_character_index": 11347,
+                    "last_character_index": 12293
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/configuration/serve_args.md",
+                    "first_character_index": 0,
+                    "last_character_index": 1014
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/quantization/fp8.md",
+                    "first_character_index": 4565,
+                    "last_character_index": 5618
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/quantization/fp8.md",
+                    "first_character_index": 0,
+                    "last_character_index": 1723
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/quantization/int4.md",
+                    "first_character_index": 3974,
+                    "last_character_index": 5807
+                }
+            ],
+            "answer": "The command that can be used to evaluate the accuracy of a quantized model using lm_eval with vLLM is:\n\n```bash\nlm_eval --model vllm \\\n  --model_args pretrained=\"./Meta-Llama-3-8B-Instruct-W8A8-Dynamic-Per-Token\",add_bos_token=true \\\n  --tasks gsm8k \\\n  --num_fewshot 5 \\\n  --limit 250 \\\n  --batch_size 'auto'\n```"
+        },
+        {
+            "question_id": "5ea5c01a-c953-4477-ae3a-978e20bd73b8",
+            "question": "What method does vLLM's LLM class provide for generating embedding vectors from prompts?",
+            "retrieved_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/entrypoints/llm.py",
+                    "first_character_index": 54267,
+                    "last_character_index": 55841
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/models/pooling_models.md",
+                    "first_character_index": 3820,
+                    "last_character_index": 5739
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/getting_started/quickstart.md",
+                    "first_character_index": 1991,
+                    "last_character_index": 3860
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/entrypoints/llm.py",
+                    "first_character_index": 3099,
+                    "last_character_index": 3541
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/entrypoints/llm.py",
+                    "first_character_index": 52376,
+                    "last_character_index": 54257
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/tests/models/test_oot_registration.py",
+                    "first_character_index": 1440,
+                    "last_character_index": 3332
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/benchmarks/benchmark_prefix_caching.py",
+                    "first_character_index": 8548,
+                    "last_character_index": 8691
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/examples/offline_inference/basic/embed.py",
+                    "first_character_index": 0,
+                    "last_character_index": 1407
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/examples/offline_inference/embed_matryoshka_fy.py",
+                    "first_character_index": 0,
+                    "last_character_index": 1595
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/spec_decode.md",
+                    "first_character_index": 3949,
+                    "last_character_index": 5017
+                }
+            ],
+            "answer": "The method provided by vLLM's LLM class for generating embedding vectors from prompts is `LLM.embed`."
+        },
+        {
+            "question_id": "7c43f334-9999-42b3-935f-11320dc75270",
+            "question": "What hardware platforms does vLLM support?",
+            "retrieved_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/quantization/supported_hardware.md",
+                    "first_character_index": 2059,
+                    "last_character_index": 2697
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/quantization/supported_hardware.md",
+                    "first_character_index": 0,
+                    "last_character_index": 219
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/getting_started/installation/cpu.md",
+                    "first_character_index": 9439,
+                    "last_character_index": 9926
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/getting_started/installation/gpu/rocm.inc.md",
+                    "first_character_index": 9148,
+                    "last_character_index": 9357
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/usage/v1_guide.md",
+                    "first_character_index": 3311,
+                    "last_character_index": 5294
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/compatibility_matrix.md",
+                    "first_character_index": 5119,
+                    "last_character_index": 5288
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/getting_started/installation/README.md",
+                    "first_character_index": 0,
+                    "last_character_index": 1156
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/compatibility_matrix.md",
+                    "first_character_index": 0,
+                    "last_character_index": 362
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/tests/quantization/test_fp8.py",
+                    "first_character_index": 5248,
+                    "last_character_index": 6672
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/utils/__init__.py",
+                    "first_character_index": 35944,
+                    "last_character_index": 37387
+                }
+            ],
+            "answer": "The hardware platforms that vLLM supports are NVIDIA, AMD, Intel GPU, and TPU."
+        },
+        {
+            "question_id": "81e37f26-1203-40ad-a848-764d187d083f",
+            "question": "What are the differences between mm_kwargs and tok_kwargs when using the _call_hf_processor method in vLLM multimodal processing?",
+            "retrieved_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/contributing/model/multimodal.md",
+                    "first_character_index": 24847,
+                    "last_character_index": 25721
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/contributing/model/multimodal.md",
+                    "first_character_index": 23195,
+                    "last_character_index": 24838
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/llava_onevision.py",
+                    "first_character_index": 9506,
+                    "last_character_index": 11207
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/mllama4.py",
+                    "first_character_index": 20409,
+                    "last_character_index": 21665
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/minicpmv.py",
+                    "first_character_index": 22935,
+                    "last_character_index": 24774
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/llava_onevision.py",
+                    "first_character_index": 11217,
+                    "last_character_index": 12954
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/granite_speech.py",
+                    "first_character_index": 6034,
+                    "last_character_index": 7102
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/ultravox.py",
+                    "first_character_index": 4991,
+                    "last_character_index": 6706
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/qwen_vl.py",
+                    "first_character_index": 19421,
+                    "last_character_index": 21369
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/blip2.py",
+                    "first_character_index": 16061,
+                    "last_character_index": 18013
+                }
+            ],
+            "answer": "The differences between `mm_kwargs` and `tok_kwargs` when using the `_call_hf_processor` method in vLLM multimodal processing are:\n\n- `mm_kwargs` is used to both initialize and call the Hugging Face processor.\n- `tok_kwargs` is only used to call the Hugging Face processor.\n\nThis allows for a flexible handling of both the model inputs and the tokenizer parameters during the processor call."
+        }
+    ],
+    "k": 10
+}
