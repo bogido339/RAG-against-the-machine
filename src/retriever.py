@@ -11,7 +11,7 @@ class Retriever:
     def __init__(
         self,
         chunks_path: str = "data/processed/chunks.json",
-        bm25_index: str = "data/processed/bm25_index",
+        bm25_index: str = "data/processed/bm25_index"
     ) -> None:
         """Load chunks and the saved index."""
         try:
@@ -27,7 +27,7 @@ class Retriever:
 
             self.retriever = bm25s.BM25.load(
                 bm25_index,
-                load_corpus=True,
+                load_corpus=True
             )
         except FileNotFoundError:
             raise RetrieverError(
@@ -41,11 +41,7 @@ class Retriever:
         except (KeyError, TypeError):
             raise RetrieverError("Invalid chunk structure.")
 
-    def search(
-        self,
-        query: str,
-        top_k: int = 3,
-    ) -> List[Dict[str, Any]]:
+    def search(self, query: str, top_k: int = 3) -> List[Dict[str, Any]]:
         """Return at most top_k unique source locations."""
         if not query.strip():
             raise RetrieverError("Query must not be empty.")
@@ -54,7 +50,7 @@ class Retriever:
 
         results, _ = self.retriever.retrieve(
             bm25s.tokenize(query),
-            k=min(top_k, len(self.chunks)),
+            k=min(top_k, len(self.chunks))
         )
 
         sources: List[Dict[str, Any]] = []
@@ -70,7 +66,7 @@ class Retriever:
             location = (
                 chunk["file_path"],
                 chunk["first_character_index"],
-                chunk["last_character_index"],
+                chunk["last_character_index"]
             )
             if location in seen:
                 continue
@@ -79,7 +75,7 @@ class Retriever:
             sources.append({
                 "file_path": location[0],
                 "first_character_index": location[1],
-                "last_character_index": location[2],
+                "last_character_index": location[2]
             })
 
             if len(sources) >= top_k:
@@ -108,7 +104,7 @@ class DatasetRetriever:
         self,
         dataset_path: str,
         save_directory: str,
-        top_k: int = 5,
+        top_k: int = 5
     ) -> None:
         """Save results inside the requested output directory."""
         if not isinstance(top_k, int) or top_k <= 0:
@@ -119,22 +115,28 @@ class DatasetRetriever:
                 dataset = json.load(file)
 
             results = []
-            for query in dataset["rag_questions"]:
-                results.append({
-                    "question_id": query["question_id"],
-                    "question": query["question"],
-                    "retrieved_sources": self.retriever.search(
-                        query["question"], top_k
-                    ),
-                })
-        except FileNotFoundError:
-            raise DatasetRetrieverError(f"Dataset does not exist: {dataset_path}")
-        except PermissionError:
-            raise DatasetRetrieverError(f"Cannot read dataset: {dataset_path}")
-        except (json.JSONDecodeError, UnicodeError):
-            raise DatasetRetrieverError("Cannot read dataset JSON.")
+            for idx, query in enumerate(dataset["rag_questions"], start=1):
+                try:
+                    results.append({
+                        "question_id": query["question_id"],
+                        "question": query["question"],
+                        "retrieved_sources": self.retriever.search(
+                            query["question"], top_k
+                        ),
+                    })
+                except (KeyError, RetrieverError) as e:
+                    print(f"Warning: Skipping query #{idx} due to error ({type(e).__name__}): {e}")
+
+        except OSError as error:
+            raise DatasetRetrieverError(
+                f"Cannot read dataset '{dataset_path}': {error}")
+
+        except (json.JSONDecodeError, UnicodeError) as error:
+            raise DatasetRetrieverError(
+                f"Invalid dataset JSON '{dataset_path}': {error}")
         except (KeyError, TypeError):
-            raise DatasetRetrieverError("Invalid dataset structure.")
+            raise DatasetRetrieverError(
+                f"Invalid dataset structure in {dataset_path}.")
 
         output_directory = Path(save_directory)
         output_path = output_directory / Path(dataset_path).name
@@ -146,7 +148,7 @@ class DatasetRetriever:
                     {"search_results": results, "k": top_k},
                     file,
                     indent=4,
-                    ensure_ascii=False,
+                    ensure_ascii=False
                 )
         except OSError as error:
             raise DatasetRetrieverError(

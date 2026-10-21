@@ -92,50 +92,64 @@ class DatasetGenerator:
         input_path = Path(student_search_results_path)
         
         if not input_path.exists():
-            raise DatasetGeneratorError(f"The search results file does not exist: {input_path}")
+            raise DatasetGeneratorError(
+                f"The search results file does not exist: {input_path}")
             
         try:
             with input_path.open("r", encoding="utf-8") as file:
                 content = file.read().strip()
                 if not content:
-                    raise DatasetGeneratorError(f"The search results file is empty (0 bytes): {input_path}")
+                    raise DatasetGeneratorError(
+                        f"The search results file is empty"
+                        f" (0 bytes): {input_path}")
                 data = json.loads(content)
         except PermissionError as e:
             raise DatasetGeneratorError(
-                f"Permission denied: You do not have read access to '{input_path}'. Check file permissions."
+                f"Permission denied: You do not have read access to "
+                f"'{input_path}'. Check file permissions."
             )
         except json.decoder.JSONDecodeError as e:
             raise DatasetGeneratorError(
-                f"Failed to parse JSON from '{input_path}'. The file contains invalid JSON. Details: {e}"
+                f"Failed to parse JSON from '{input_path}'. "
+                f"The file contains invalid JSON. Details: {e}"
             )
 
         
         results = []
+        try:
+            for query in tqdm(data["search_results"][:5]):
+                try:
+                    question_id = query["question_id"]
+                    question = query["question"]
+                    retrieved_sources = query["retrieved_sources"]
 
-        for query in tqdm(data["search_results"][:5]):
+                    chunks = self._load_chunks(retrieved_sources)
+                    answer = self.generator.generate(question, chunks)
 
-            question_id = query["question_id"]
-            question = query["question"]
-            retrieved_sources = query["retrieved_sources"]
+                    results.append(
+                        {
+                            "question_id": question_id,
+                            "question": question,
+                            "retrieved_sources": retrieved_sources,
+                            "answer": answer
+                        }
+                    )
+                except Exception as e:
+                    print(
+                        f"Warning: Failed to process question ID "
+                        f"'{query.get('question_id', 'unknown')}'. Error: {e}")
 
-            chunks = self._load_chunks(retrieved_sources)
-            answer = self.generator.generate(question, chunks)
+            output = {
+                "search_results": results,
+                "k": data["k"]
+            }
 
-            results.append(
-                {
-                    "question_id": question_id,
-                    "question": question,
-                    "retrieved_sources": retrieved_sources,
-                    "answer": answer
-                }
-            )
-
-        output = {
-            "search_results": results,
-            "k": data["k"]
-        }
-
-        self._save(output, input_path, Path(save_directory))
+            self._save(output, input_path, Path(save_directory))
+                    
+        except Exception as e:
+            raise DatasetGeneratorError(
+                f"Critical error while processing or saving dataset for "
+                f"'{input_path}': {e}")
 
     def _load_chunks(self, sources: List[Dict]) -> List[str]:
         chunks = []

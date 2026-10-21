@@ -2,7 +2,7 @@
   "rag_questions": [
     {
       "question_id": "189c8b8a-e59c-4fca-92ad-c02df42cbe40",
-      "question": "What activation formats does the fused batched MoE layer return in vLLM?"
+      "question": ""
     },
     {
       "question_id": "02789461-05fd-435d-9673-91606102d6c9",

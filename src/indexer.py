@@ -101,7 +101,7 @@ class Indexer:
                     "file_path": str(file_path),
                     "first_character_index": start_index,
                     "last_character_index": end_index,
-                    "content": chunk,
+                    "content": chunk
                 }
             )
 
@@ -137,13 +137,13 @@ class Indexer:
 
     def _chunk_file(self, file_path: Path) -> List[Dict[str, Any]]:
         """Choose the correct chunking strategy for a file."""
-        if file_path.suffix == ".py":
+        if file_path.suffix.lower() == ".py":
             return self.chunk_python(file_path)
 
-        if file_path.suffix == ".md":
+        if file_path.suffix.lower() == ".md":
             return self.chunk_markdown(file_path)
 
-        if file_path.suffix == ".txt":
+        if file_path.suffix.lower() == ".txt":
             return self.chunk_text(file_path)
 
         return []
