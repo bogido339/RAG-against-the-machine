@@ -48,5 +48,5 @@ class RagCLI:
             self, student_search_results_path: str, dataset_path: str
     ) -> None:
         """Print local recall scores against a ground-truth dataset."""
-        evaluator = Evaluator()
-        evaluator.evaluate(student_search_results_path, dataset_path)
+        evaluator = Evaluator(student_search_results_path, dataset_path)
+        evaluator.evaluate()
