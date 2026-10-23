@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 import bm25s
 from src.error_classes import RetrieverError, DatasetRetrieverError
+from src.models import MinimalSource, RagDataset, StudentSearchResults
 
 
 class Retriever:
@@ -72,11 +73,14 @@ class Retriever:
                 continue
 
             seen.add(location)
-            sources.append({
-                "file_path": location[0],
-                "first_character_index": location[1],
-                "last_character_index": location[2]
-            })
+            #-------------------------------------------
+            source = MinimalSource(
+                file_path=location[0],
+                first_character_index=location[1],
+                last_character_index=location[2]
+            )
+
+            sources.append(source.model_dump())
 
             if len(sources) >= top_k:
                 break
@@ -113,9 +117,11 @@ class DatasetRetriever:
         try:
             with open(dataset_path, "r", encoding="utf-8") as file:
                 dataset = json.load(file)
+            #-------------------------------------------
+            dataset = RagDataset.model_validate(dataset)
 
             results = []
-            for idx, query in enumerate(dataset["rag_questions"], start=1):
+            for idx, query in enumerate(dataset.rag_questions, start=1):
                 try:
                     results.append({
                         "question_id": query["question_id"],
@@ -143,13 +149,15 @@ class DatasetRetriever:
 
         try:
             output_directory.mkdir(parents=True, exist_ok=True)
+
+            output = StudentSearchResults(
+                search_results=results,
+                k=top_k
+            )
+
             with output_path.open("w", encoding="utf-8") as file:
-                json.dump(
-                    {"search_results": results, "k": top_k},
-                    file,
-                    indent=4,
-                    ensure_ascii=False
-                )
+                file.write(output.model_dump_json(indent=4))
+
         except OSError as error:
             raise DatasetRetrieverError(
                 f"Cannot save results to {output_path}: {error}"

@@ -6,6 +6,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from src.retriever import Retriever
 from src.error_classes import GeneratorErrro, DatasetGeneratorError
 from tqdm import tqdm
+from src.models import StudentSearchResults, StudentSearchResultsAndAnswer
 
 
 class Qwen:
@@ -102,7 +103,10 @@ class DatasetGenerator:
                     raise DatasetGeneratorError(
                         f"The search results file is empty"
                         f" (0 bytes): {input_path}")
-                data = json.loads(content)
+
+                #------------------------------------------------------
+                data = StudentSearchResults.model_validate_json(content)
+
         except PermissionError as e:
             raise DatasetGeneratorError(
                 f"Permission denied: You do not have read access to "
@@ -117,11 +121,11 @@ class DatasetGenerator:
         
         results = []
         try:
-            for query in tqdm(data["search_results"][:5]):
+            for query in tqdm(data.search_results):
                 try:
-                    question_id = query["question_id"]
-                    question = query["question"]
-                    retrieved_sources = query["retrieved_sources"]
+                    question_id = query.question_id
+                    question = query.question
+                    retrieved_sources = query.retrieved_sources
 
                     chunks = self._load_chunks(retrieved_sources)
                     answer = self.generator.generate(question, chunks)
@@ -139,10 +143,10 @@ class DatasetGenerator:
                         f"Warning: Failed to process question ID "
                         f"'{query.get('question_id', 'unknown')}'. Error: {e}")
 
-            output = {
-                "search_results": results,
-                "k": data["k"]
-            }
+            output = StudentSearchResultsAndAnswer(
+                search_results=results,
+                k=data.k
+            )
 
             self._save(output, input_path, Path(save_directory))
                     
@@ -155,7 +159,7 @@ class DatasetGenerator:
         chunks = []
 
         for source in sources:
-            file_path = Path(source["file_path"])
+            file_path = Path(source.file_path)
 
             content = file_path.read_text(encoding="utf-8")
     

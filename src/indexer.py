@@ -10,7 +10,7 @@ from langchain_text_splitters import (
 )
 
 from src.error_classes import IndexerError
-
+from src.models import Chunk
 
 class Indexer:
     """Build the searchable index from the source codebase."""
@@ -96,14 +96,15 @@ class Indexer:
 
             end_index = start_index + len(chunk)
 
-            result.append(
-                {
-                    "file_path": str(file_path),
-                    "first_character_index": start_index,
-                    "last_character_index": end_index,
-                    "content": chunk
-                }
+            #-------------------------------------------
+            chunk_record = Chunk(
+                file_path=str(file_path),
+                first_character_index=start_index,
+                last_character_index=end_index,
+                content=chunk
             )
+
+            result.append(chunk_record.model_dump())
 
             current_pos = max(start_index + 1, end_index - overlap)
 

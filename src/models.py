@@ -7,6 +7,10 @@ class MinimalSource(BaseModel):
     last_character_index: int
 
 
+class Chunk(MinimalSource):
+    content: str
+
+
 class UnansweredQuestion(BaseModel):
     question_id: str
     question: str
