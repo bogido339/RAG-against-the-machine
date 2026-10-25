@@ -124,10 +124,10 @@ class DatasetRetriever:
             for idx, query in enumerate(dataset.rag_questions, start=1):
                 try:
                     results.append({
-                        "question_id": query["question_id"],
-                        "question": query["question"],
+                        "question_id": query.question_id,
+                        "question": query.question,
                         "retrieved_sources": self.retriever.search(
-                            query["question"], top_k
+                            query.question, top_k
                         ),
                     })
                 except (KeyError, RetrieverError) as e:

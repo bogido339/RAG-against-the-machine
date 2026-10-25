@@ -185,6 +185,7 @@ class Indexer:
         all_chunks = []
         files = self._find_files()
 
+        #prosise
         if len(files) == 0:
             raise IndexerError(
                 f"Source directory is empty: {self.source_directory}")
@@ -196,5 +197,6 @@ class Indexer:
             except (OSError, UnicodeDecodeError) as error:
                 print(f"Skipping {file_path}: {error}")
 
+        #output
         self._save_chunks(all_chunks)
         self._build_bm25_index(all_chunks)

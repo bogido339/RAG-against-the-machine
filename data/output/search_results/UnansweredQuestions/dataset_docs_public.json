@@ -1,7 +1,39 @@
 {
     "search_results": [
         {
+            "question_id": "17526382-7764-4120-b5e8-2d3726b8a4da",
+            "question": "What HTTP endpoint is used to dynamically load a LoRA adapter in vLLM?",
+            "retrieved_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/lora.md",
+                    "first_character_index": 4695,
+                    "last_character_index": 6098
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/plugins/lora_resolvers/README.md",
+                    "first_character_index": 0,
+                    "last_character_index": 829
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/examples/others/tensorize_vllm_model.py",
+                    "first_character_index": 3857,
+                    "last_character_index": 4456
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/lora.md",
+                    "first_character_index": 6100,
+                    "last_character_index": 8080
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/lora.md",
+                    "first_character_index": 4075,
+                    "last_character_index": 4693
+                }
+            ]
+        },
+        {
             "question_id": "cc83c230-099f-4c11-aeab-8c09715c5942",
+            "question": "What command can be used to evaluate the accuracy of a quantized model using lm_eval with vLLM?",
             "retrieved_sources": [
                 {
                     "file_path": "data/raw/vllm-0.10.1/docs/features/quantization/int4.md",

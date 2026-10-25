@@ -51,9 +51,5 @@ class Evaluator:
                 print("---"*40)
 
 
-
-
-
-
         except KeyError as e:
             raise EvaluatorError(f"key not found: {e}")
