@@ -11,3 +11,6 @@ words_list = [
     "air", "creating", "moments", "of", "deep", "calm", "and", "true", "happiness", "today"
 ]
 
+for word in words_list:
+    yield word
+
