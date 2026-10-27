@@ -52,6 +52,21 @@ class Generator:
         self.model = Qwen()
         self.retriever = Retriever()
 
+    def _load_chunks(self, sources: List[Dict]) -> List[str]:
+        chunks = []
+
+        for source in sources:
+            file_path = Path(source["file_path"])
+
+            content = file_path.read_text(encoding="utf-8")
+    
+            start = source["first_character_index"]
+            end = source["last_character_index"]
+
+            chunks.append(content[start:end])
+
+        return chunks
+
     def get_prompt(self, query: str, top_chunks: list[str]) -> str:
         """Build the RAG prompt."""
         context = "\n\n".join(top_chunks)
@@ -68,7 +83,7 @@ Answer:"""
 
     def generate(self, query: str, chunks: List[Dict]) -> str:
 
-        prompt = self.get_prompt(query, chunks)
+        prompt = self.get_prompt(query, self._load_chunks(chunks))
 
         return self.model.generate_response(prompt)
 
@@ -127,7 +142,7 @@ class DatasetGenerator:
                     question = query.question
                     retrieved_sources = query.retrieved_sources
 
-                    chunks = self._load_chunks(retrieved_sources)
+                    chunks = self.generator._load_chunks(retrieved_sources)
                     answer = self.generator.generate(question, chunks)
 
                     results.append(
@@ -154,21 +169,6 @@ class DatasetGenerator:
             raise DatasetGeneratorError(
                 f"Critical error while processing or saving dataset for "
                 f"'{input_path}': {e}")
-
-    def _load_chunks(self, sources: List[Dict]) -> List[str]:
-        chunks = []
-
-        for source in sources:
-            file_path = Path(source.file_path)
-
-            content = file_path.read_text(encoding="utf-8")
-    
-            start = source["first_character_index"]
-            end = source["last_character_index"]
-
-            chunks.append(content[start:end])
-
-        return chunks
 
     def _save(
         self, data: Dict[str, Any], input_path: Path, save_directory: Path
