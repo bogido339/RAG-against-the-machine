@@ -18,8 +18,11 @@ chunk = Chunk(
     last_character_index=10
 )
 
-print(chunk.content,
-    chunk.file_path,
-    chunk.first_character_index,
-    chunk.last_character_index
-)
+# print(chunk.content,
+#     chunk.file_path,
+#     chunk.first_character_index,
+#     chunk.last_character_index
+# )
+
+
+print(chunk)

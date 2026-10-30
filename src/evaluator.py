@@ -2,12 +2,7 @@ from pathlib import Path
 from src.error_classes import EvaluatorError
 import json
 
-from src.models import (
-    AnsweredQuestion,
-    MinimalSource,
-    RagDataset,
-    StudentSearchResults,
-)
+from src.models import RagDataset, StudentSearchResults
 
 
 class Evaluator:

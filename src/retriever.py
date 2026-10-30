@@ -4,6 +4,7 @@ from typing import Any, Dict, List
 import bm25s
 from src.error_classes import RetrieverError, DatasetRetrieverError
 from src.models import MinimalSource, RagDataset, StudentSearchResults
+from pydantic import ValidationError
 
 
 class Retriever:
@@ -105,10 +106,7 @@ class DatasetRetriever:
         self.retriever = Retriever()
 
     def search_dataset(
-        self,
-        dataset_path: str,
-        save_directory: str,
-        top_k: int = 5
+            self, dataset_path: str, save_directory: str, top_k: int = 5
     ) -> None:
         """Save results inside the requested output directory."""
         if not isinstance(top_k, int) or top_k <= 0:
@@ -143,6 +141,10 @@ class DatasetRetriever:
         except (KeyError, TypeError):
             raise DatasetRetrieverError(
                 f"Invalid dataset structure in {dataset_path}.")
+        except ValidationError as error:
+            raise DatasetRetrieverError(
+                f"Invalid dataset JSON '{dataset_path}': {error}"
+            )
 
         output_directory = Path(save_directory)
         output_path = output_directory / Path(dataset_path).name
@@ -150,6 +152,7 @@ class DatasetRetriever:
         try:
             output_directory.mkdir(parents=True, exist_ok=True)
 
+            #-------------------------------------------
             output = StudentSearchResults(
                 search_results=results,
                 k=top_k
