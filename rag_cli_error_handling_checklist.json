@@ -1,0 +1,1763 @@
+{
+  "title": "RAG against the machine - CLI error-handling checklist",
+  "project_subject_version": "2.0",
+  "scope": "Six required Python Fire commands; realistic and important known failure cases, not an exhaustive enumeration of every possible OS/library/runtime exception.",
+  "source_requirements": {
+    "commands": [
+      "index --max_chunk_size <int>",
+      "search <query> --k <int>",
+      "search_dataset --dataset_path <path> --k <int> --save_directory <dir>",
+      "answer <query> --k <int>",
+      "answer_dataset --student_search_results_path <path> --save_directory <dir>",
+      "evaluate --student_search_results_path <path> --dataset_path <path>"
+    ],
+    "limits": {
+      "max_chunk_size_default": 2000,
+      "max_source_span_characters": 2000,
+      "indexing_time_seconds": 300,
+      "retrieval_200_questions_seconds": 90
+    },
+    "requirements": [
+      "Python 3.10+",
+      "Python Fire CLI",
+      "Pydantic exchange models",
+      "uv package manager",
+      "graceful handling of empty queries, k=0, missing files, malformed JSON",
+      "configurable input/output paths"
+    ]
+  },
+  "guidance": {
+    "exception_groups": {
+      "OSError": "Filesystem and model-loading OS errors: FileNotFoundError, PermissionError, IsADirectoryError, NotADirectoryError, etc. Do not assume it catches JSONDecodeError or UnicodeDecodeError.",
+      "json.JSONDecodeError": "Malformed JSON syntax (subclass of ValueError).",
+      "UnicodeError": "Encoding/decoding failures; not an OSError.",
+      "pydantic.ValidationError": "Data shape/field validation failures; not an OSError.",
+      "ValueError and TypeError": "Invalid command values and library argument failures.",
+      "KeyboardInterrupt": "User cancellation; not a subclass of Exception.",
+      "Exception": "Last-resort CLI boundary, with detailed logging; do not indiscriminately swallow internal bugs."
+    },
+    "cli_exit_codes": {
+      "0": "success",
+      "1": "operational error",
+      "2": "invalid CLI input (suggested)",
+      "130": "Ctrl+C (suggested)"
+    },
+    "suggested_pipeline": [
+      "Validate CLI arguments early",
+      "Validate inputs and paths",
+      "Load and validate Pydantic models",
+      "Run indexing/retrieval/generation/evaluation",
+      "Validate output models",
+      "Save JSON atomically when possible",
+      "Log contextual details and exit nonzero on failure"
+    ],
+    "important_note": "Fire argument parsing and shell errors may happen before your handler is called. A try/except inside index/search/etc. cannot catch all of them."
+  },
+  "total_cases": 184,
+  "cases_by_command": {
+    "index": [
+      {
+        "id": "INDEX-001",
+        "command": "index",
+        "stage": "argument_parsing",
+        "case": "Missing required positional argument",
+        "possible_exception_or_signal": "Python Fire usage error",
+        "recommended_handling": "Let Fire show usage or normalize through an entrypoint wrapper; do not expect method-level try/except to run.",
+        "severity": "error",
+        "example_input": "uv run python -m src search"
+      },
+      {
+        "id": "INDEX-002",
+        "command": "index",
+        "stage": "argument_parsing",
+        "case": "Unknown command or argument",
+        "possible_exception_or_signal": "Python Fire usage error",
+        "recommended_handling": "Show supported commands/options and exit nonzero; validate unknown flags before dispatch where practical.",
+        "severity": "error",
+        "example_input": "uv run python -m src unknown_command"
+      },
+      {
+        "id": "INDEX-003",
+        "command": "index",
+        "stage": "argument_parsing",
+        "case": "Invalid option type (e.g. k=\"abc\")",
+        "possible_exception_or_signal": "TypeError / ValueError / Fire conversion behavior",
+        "recommended_handling": "Validate types explicitly at the command boundary and emit a friendly message.",
+        "severity": "error",
+        "example_input": "--k abc"
+      },
+      {
+        "id": "INDEX-004",
+        "command": "index",
+        "stage": "argument_parsing",
+        "case": "Shell treats next line as a new command",
+        "possible_exception_or_signal": "Shell command-not-found (outside Python)",
+        "recommended_handling": "Document single-line commands or use trailing backslashes; cannot be caught inside Python.",
+        "severity": "error",
+        "example_input": "uv run python -m src search_dataset\n--k 10"
+      },
+      {
+        "id": "INDEX-005",
+        "command": "index",
+        "stage": "execution",
+        "case": "User interrupts with Ctrl+C",
+        "possible_exception_or_signal": "KeyboardInterrupt",
+        "recommended_handling": "Catch at CLI boundary, print Interrupted, exit 130; ensure resources close.",
+        "severity": "error",
+        "example_input": "Ctrl+C"
+      },
+      {
+        "id": "INDEX-006",
+        "command": "index",
+        "stage": "execution",
+        "case": "Missing Python dependency or broken uv environment",
+        "possible_exception_or_signal": "ModuleNotFoundError / uv subprocess failure",
+        "recommended_handling": "Use uv sync; report installation error; failure may happen before CLI starts.",
+        "severity": "error",
+        "example_input": "uv run python -m src ..."
+      },
+      {
+        "id": "INDEX-007",
+        "command": "index",
+        "stage": "execution",
+        "case": "Unexpected internal bug",
+        "possible_exception_or_signal": "Unexpected Exception",
+        "recommended_handling": "Log full traceback to debug log; print concise error and exit nonzero; do not silently suppress programming bugs.",
+        "severity": "error"
+      },
+      {
+        "id": "INDEX-008",
+        "command": "index",
+        "stage": "output",
+        "case": "Output directory cannot be created",
+        "possible_exception_or_signal": "PermissionError / OSError",
+        "recommended_handling": "Catch OSError around mkdir; include target path.",
+        "severity": "error"
+      },
+      {
+        "id": "INDEX-009",
+        "command": "index",
+        "stage": "output",
+        "case": "Output parent is a file",
+        "possible_exception_or_signal": "FileExistsError / NotADirectoryError",
+        "recommended_handling": "Reject invalid directory hierarchy.",
+        "severity": "error"
+      },
+      {
+        "id": "INDEX-010",
+        "command": "index",
+        "stage": "output",
+        "case": "Output file cannot be written or replaced",
+        "possible_exception_or_signal": "PermissionError / OSError",
+        "recommended_handling": "Catch OSError around write/replace and include output path.",
+        "severity": "error"
+      },
+      {
+        "id": "INDEX-011",
+        "command": "index",
+        "stage": "output",
+        "case": "Disk full or quota exceeded",
+        "possible_exception_or_signal": "OSError: ENOSPC / EDQUOT",
+        "recommended_handling": "Report low storage/quota; clean up temporary file.",
+        "severity": "error"
+      },
+      {
+        "id": "INDEX-012",
+        "command": "index",
+        "stage": "output",
+        "case": "File system becomes read-only or unavailable",
+        "possible_exception_or_signal": "OSError: EROFS / EIO",
+        "recommended_handling": "Report storage failure and avoid claiming successful save.",
+        "severity": "error"
+      },
+      {
+        "id": "INDEX-013",
+        "command": "index",
+        "stage": "output",
+        "case": "Serialization fails",
+        "possible_exception_or_signal": "TypeError / ValueError",
+        "recommended_handling": "Validate data / use model_dump(mode=\"json\") before json.dump.",
+        "severity": "error"
+      },
+      {
+        "id": "INDEX-014",
+        "command": "index",
+        "stage": "output",
+        "case": "Process interrupted during write",
+        "possible_exception_or_signal": "KeyboardInterrupt / OSError",
+        "recommended_handling": "Use temporary file + os.replace for atomic output, and cleanup on failure.",
+        "severity": "error"
+      },
+      {
+        "id": "INDEX-015",
+        "command": "index",
+        "stage": "output",
+        "case": "Output path conflicts with input path",
+        "possible_exception_or_signal": "Application validation error",
+        "recommended_handling": "Reject accidental overwrite of input dataset unless intentionally supported.",
+        "severity": "error"
+      },
+      {
+        "id": "INDEX-016",
+        "command": "index",
+        "stage": "indexing",
+        "case": "Source directory does not exist",
+        "possible_exception_or_signal": "FileNotFoundError / explicit validation",
+        "recommended_handling": "Verify data/raw exists and is a directory; rglob on missing dir can silently yield nothing.",
+        "severity": "error"
+      },
+      {
+        "id": "INDEX-017",
+        "command": "index",
+        "stage": "indexing",
+        "case": "Source directory is empty or no supported files",
+        "possible_exception_or_signal": "ValueError / IndexerError",
+        "recommended_handling": "Fail with clear no files/chunks message.",
+        "severity": "error"
+      },
+      {
+        "id": "INDEX-018",
+        "command": "index",
+        "stage": "indexing",
+        "case": "Source directory unreadable",
+        "possible_exception_or_signal": "PermissionError / OSError",
+        "recommended_handling": "Handle traversal and read failures with path context.",
+        "severity": "error"
+      },
+      {
+        "id": "INDEX-019",
+        "command": "index",
+        "stage": "indexing",
+        "case": "Python or Markdown source cannot be decoded",
+        "possible_exception_or_signal": "UnicodeDecodeError",
+        "recommended_handling": "Specify UTF-8; choose documented skip-or-fail policy.",
+        "severity": "error"
+      },
+      {
+        "id": "INDEX-020",
+        "command": "index",
+        "stage": "indexing",
+        "case": "Source file disappears or becomes unreadable during scan",
+        "possible_exception_or_signal": "OSError",
+        "recommended_handling": "Handle read races while indexing and log file path.",
+        "severity": "error"
+      },
+      {
+        "id": "INDEX-021",
+        "command": "index",
+        "stage": "indexing",
+        "case": "max_chunk_size is zero or negative",
+        "possible_exception_or_signal": "ValueError",
+        "recommended_handling": "Require 1 <= max_chunk_size <= 2000.",
+        "severity": "error"
+      },
+      {
+        "id": "INDEX-022",
+        "command": "index",
+        "stage": "indexing",
+        "case": "max_chunk_size greater than 2000",
+        "possible_exception_or_signal": "ValueError",
+        "recommended_handling": "Reject; moulinette considers overlong retrieved sources invalid.",
+        "severity": "error"
+      },
+      {
+        "id": "INDEX-023",
+        "command": "index",
+        "stage": "indexing",
+        "case": "max_chunk_size is float/string/bool",
+        "possible_exception_or_signal": "TypeError / ValueError",
+        "recommended_handling": "Require a true integer and reject bool.",
+        "severity": "error"
+      },
+      {
+        "id": "INDEX-024",
+        "command": "index",
+        "stage": "indexing",
+        "case": "Chunk positions not found or negative",
+        "possible_exception_or_signal": "ValueError / IndexerError",
+        "recommended_handling": "Validate indices and text match before persistence.",
+        "severity": "error"
+      },
+      {
+        "id": "INDEX-025",
+        "command": "index",
+        "stage": "indexing",
+        "case": "Chunk length exceeds configured limit",
+        "possible_exception_or_signal": "ValueError / IndexerError",
+        "recommended_handling": "Check each chunk length before indexing.",
+        "severity": "error"
+      },
+      {
+        "id": "INDEX-026",
+        "command": "index",
+        "stage": "indexing",
+        "case": "BM25 tokenization/indexing fails",
+        "possible_exception_or_signal": "ValueError / RuntimeError / library-specific",
+        "recommended_handling": "Handle invalid corpus; log root cause; avoid half-written index.",
+        "severity": "error"
+      },
+      {
+        "id": "INDEX-027",
+        "command": "index",
+        "stage": "indexing",
+        "case": "Index save fails",
+        "possible_exception_or_signal": "OSError",
+        "recommended_handling": "Catch OSError from bm25s.save and report destination.",
+        "severity": "error"
+      },
+      {
+        "id": "INDEX-028",
+        "command": "index",
+        "stage": "indexing",
+        "case": "No free space or insufficient memory during indexing",
+        "possible_exception_or_signal": "OSError / MemoryError",
+        "recommended_handling": "Report resource issue; do not mask underlying cause.",
+        "severity": "error"
+      }
+    ],
+    "search": [
+      {
+        "id": "SEARCH-001",
+        "command": "search",
+        "stage": "argument_parsing",
+        "case": "Missing required positional argument",
+        "possible_exception_or_signal": "Python Fire usage error",
+        "recommended_handling": "Let Fire show usage or normalize through an entrypoint wrapper; do not expect method-level try/except to run.",
+        "severity": "error",
+        "example_input": "uv run python -m src search"
+      },
+      {
+        "id": "SEARCH-002",
+        "command": "search",
+        "stage": "argument_parsing",
+        "case": "Unknown command or argument",
+        "possible_exception_or_signal": "Python Fire usage error",
+        "recommended_handling": "Show supported commands/options and exit nonzero; validate unknown flags before dispatch where practical.",
+        "severity": "error",
+        "example_input": "uv run python -m src unknown_command"
+      },
+      {
+        "id": "SEARCH-003",
+        "command": "search",
+        "stage": "argument_parsing",
+        "case": "Invalid option type (e.g. k=\"abc\")",
+        "possible_exception_or_signal": "TypeError / ValueError / Fire conversion behavior",
+        "recommended_handling": "Validate types explicitly at the command boundary and emit a friendly message.",
+        "severity": "error",
+        "example_input": "--k abc"
+      },
+      {
+        "id": "SEARCH-004",
+        "command": "search",
+        "stage": "argument_parsing",
+        "case": "Shell treats next line as a new command",
+        "possible_exception_or_signal": "Shell command-not-found (outside Python)",
+        "recommended_handling": "Document single-line commands or use trailing backslashes; cannot be caught inside Python.",
+        "severity": "error",
+        "example_input": "uv run python -m src search_dataset\n--k 10"
+      },
+      {
+        "id": "SEARCH-005",
+        "command": "search",
+        "stage": "execution",
+        "case": "User interrupts with Ctrl+C",
+        "possible_exception_or_signal": "KeyboardInterrupt",
+        "recommended_handling": "Catch at CLI boundary, print Interrupted, exit 130; ensure resources close.",
+        "severity": "error",
+        "example_input": "Ctrl+C"
+      },
+      {
+        "id": "SEARCH-006",
+        "command": "search",
+        "stage": "execution",
+        "case": "Missing Python dependency or broken uv environment",
+        "possible_exception_or_signal": "ModuleNotFoundError / uv subprocess failure",
+        "recommended_handling": "Use uv sync; report installation error; failure may happen before CLI starts.",
+        "severity": "error",
+        "example_input": "uv run python -m src ..."
+      },
+      {
+        "id": "SEARCH-007",
+        "command": "search",
+        "stage": "execution",
+        "case": "Unexpected internal bug",
+        "possible_exception_or_signal": "Unexpected Exception",
+        "recommended_handling": "Log full traceback to debug log; print concise error and exit nonzero; do not silently suppress programming bugs.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH-008",
+        "command": "search",
+        "stage": "retrieval",
+        "case": "Index files missing",
+        "possible_exception_or_signal": "FileNotFoundError / OSError",
+        "recommended_handling": "Tell user to run index first; verify saved artifacts.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH-009",
+        "command": "search",
+        "stage": "retrieval",
+        "case": "Index corrupt or incompatible with bm25s version",
+        "possible_exception_or_signal": "ValueError / OSError / library-specific",
+        "recommended_handling": "Catch load error; recommend rebuilding index.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH-010",
+        "command": "search",
+        "stage": "retrieval",
+        "case": "chunks.json missing, malformed, or schema inconsistent",
+        "possible_exception_or_signal": "OSError / JSONDecodeError / ValidationError",
+        "recommended_handling": "Validate chunk metadata and index/doc count.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH-011",
+        "command": "search",
+        "stage": "retrieval",
+        "case": "Index and chunk mapping out of sync",
+        "possible_exception_or_signal": "IndexError / KeyError / application validation",
+        "recommended_handling": "Check retrieved document IDs map to the intended chunk; rebuild mismatched artifacts.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH-012",
+        "command": "search",
+        "stage": "retrieval",
+        "case": "BM25 retrieve fails",
+        "possible_exception_or_signal": "ValueError / RuntimeError / library-specific",
+        "recommended_handling": "Surface retrieval-stage failure with log details.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH-013",
+        "command": "search",
+        "stage": "retrieval",
+        "case": "Duplicate chunk content maps to wrong file",
+        "possible_exception_or_signal": "Logical validation failure (no exception)",
+        "recommended_handling": "Map search results via stable document indices, not only content string.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH-014",
+        "command": "search",
+        "stage": "retrieval",
+        "case": "Returned source path/character positions invalid",
+        "possible_exception_or_signal": "pydantic.ValidationError / ValueError",
+        "recommended_handling": "Validate MinimalSource and ensure 0 <= first < last <= source length.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH-015",
+        "command": "search",
+        "stage": "query_input",
+        "case": "Query is missing or empty",
+        "possible_exception_or_signal": "ValueError",
+        "recommended_handling": "Strip and reject empty query with friendly message.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH-016",
+        "command": "search",
+        "stage": "query_input",
+        "case": "Query contains only whitespace",
+        "possible_exception_or_signal": "ValueError",
+        "recommended_handling": "Strip and reject.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH-017",
+        "command": "search",
+        "stage": "query_input",
+        "case": "Query is nonsensical or matches nothing",
+        "possible_exception_or_signal": "No exception",
+        "recommended_handling": "Return empty results or a clear no-match message; do not crash.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH-018",
+        "command": "search",
+        "stage": "query_input",
+        "case": "Query is non-string",
+        "possible_exception_or_signal": "TypeError",
+        "recommended_handling": "Require string query.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH-019",
+        "command": "search",
+        "stage": "query_input",
+        "case": "k is zero or negative",
+        "possible_exception_or_signal": "ValueError",
+        "recommended_handling": "Require k >= 1; project asks graceful handling of k=0.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH-020",
+        "command": "search",
+        "stage": "query_input",
+        "case": "k is not an integer",
+        "possible_exception_or_signal": "TypeError / ValueError",
+        "recommended_handling": "Reject bool, floats and nonnumeric strings.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH-021",
+        "command": "search",
+        "stage": "query_input",
+        "case": "k exceeds available chunks",
+        "possible_exception_or_signal": "No exception",
+        "recommended_handling": "Use min(k, number_of_chunks) for retrieval; preserve requested k in output if contract expects it.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH-022",
+        "command": "search",
+        "stage": "query_input",
+        "case": "Index contains no chunks",
+        "possible_exception_or_signal": "ValueError",
+        "recommended_handling": "Return clear error instead of calling retrieve with k=0.",
+        "severity": "error"
+      }
+    ],
+    "search_dataset": [
+      {
+        "id": "SEARCH_DATASET-001",
+        "command": "search_dataset",
+        "stage": "argument_parsing",
+        "case": "Missing required positional argument",
+        "possible_exception_or_signal": "Python Fire usage error",
+        "recommended_handling": "Let Fire show usage or normalize through an entrypoint wrapper; do not expect method-level try/except to run.",
+        "severity": "error",
+        "example_input": "uv run python -m src search"
+      },
+      {
+        "id": "SEARCH_DATASET-002",
+        "command": "search_dataset",
+        "stage": "argument_parsing",
+        "case": "Unknown command or argument",
+        "possible_exception_or_signal": "Python Fire usage error",
+        "recommended_handling": "Show supported commands/options and exit nonzero; validate unknown flags before dispatch where practical.",
+        "severity": "error",
+        "example_input": "uv run python -m src unknown_command"
+      },
+      {
+        "id": "SEARCH_DATASET-003",
+        "command": "search_dataset",
+        "stage": "argument_parsing",
+        "case": "Invalid option type (e.g. k=\"abc\")",
+        "possible_exception_or_signal": "TypeError / ValueError / Fire conversion behavior",
+        "recommended_handling": "Validate types explicitly at the command boundary and emit a friendly message.",
+        "severity": "error",
+        "example_input": "--k abc"
+      },
+      {
+        "id": "SEARCH_DATASET-004",
+        "command": "search_dataset",
+        "stage": "argument_parsing",
+        "case": "Shell treats next line as a new command",
+        "possible_exception_or_signal": "Shell command-not-found (outside Python)",
+        "recommended_handling": "Document single-line commands or use trailing backslashes; cannot be caught inside Python.",
+        "severity": "error",
+        "example_input": "uv run python -m src search_dataset\n--k 10"
+      },
+      {
+        "id": "SEARCH_DATASET-005",
+        "command": "search_dataset",
+        "stage": "execution",
+        "case": "User interrupts with Ctrl+C",
+        "possible_exception_or_signal": "KeyboardInterrupt",
+        "recommended_handling": "Catch at CLI boundary, print Interrupted, exit 130; ensure resources close.",
+        "severity": "error",
+        "example_input": "Ctrl+C"
+      },
+      {
+        "id": "SEARCH_DATASET-006",
+        "command": "search_dataset",
+        "stage": "execution",
+        "case": "Missing Python dependency or broken uv environment",
+        "possible_exception_or_signal": "ModuleNotFoundError / uv subprocess failure",
+        "recommended_handling": "Use uv sync; report installation error; failure may happen before CLI starts.",
+        "severity": "error",
+        "example_input": "uv run python -m src ..."
+      },
+      {
+        "id": "SEARCH_DATASET-007",
+        "command": "search_dataset",
+        "stage": "execution",
+        "case": "Unexpected internal bug",
+        "possible_exception_or_signal": "Unexpected Exception",
+        "recommended_handling": "Log full traceback to debug log; print concise error and exit nonzero; do not silently suppress programming bugs.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-008",
+        "command": "search_dataset",
+        "stage": "input_file",
+        "case": "Missing required path",
+        "possible_exception_or_signal": "FileNotFoundError or pathlib.exists() == False",
+        "recommended_handling": "Reject with exact path before reading.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-009",
+        "command": "search_dataset",
+        "stage": "input_file",
+        "case": "Path points to directory instead of file",
+        "possible_exception_or_signal": "IsADirectoryError",
+        "recommended_handling": "Check is_file() and give expected type.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-010",
+        "command": "search_dataset",
+        "stage": "input_file",
+        "case": "Path points to file instead of directory",
+        "possible_exception_or_signal": "NotADirectoryError",
+        "recommended_handling": "Check is_dir() and give expected type.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-011",
+        "command": "search_dataset",
+        "stage": "input_file",
+        "case": "Cannot read due to permissions",
+        "possible_exception_or_signal": "PermissionError (OSError)",
+        "recommended_handling": "Catch OSError around open/read; show path and OS detail.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-012",
+        "command": "search_dataset",
+        "stage": "input_file",
+        "case": "Input is malformed JSON",
+        "possible_exception_or_signal": "json.JSONDecodeError",
+        "recommended_handling": "Catch JSONDecodeError, show location (line/column) and file.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-013",
+        "command": "search_dataset",
+        "stage": "input_file",
+        "case": "Input contains invalid UTF-8",
+        "possible_exception_or_signal": "UnicodeDecodeError",
+        "recommended_handling": "Catch UnicodeError or UnicodeDecodeError, show file.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-014",
+        "command": "search_dataset",
+        "stage": "input_file",
+        "case": "Input JSON has valid syntax but wrong schema",
+        "possible_exception_or_signal": "pydantic.ValidationError",
+        "recommended_handling": "Validate with model_validate or model_validate_json; show field path and a short description.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-015",
+        "command": "search_dataset",
+        "stage": "input_file",
+        "case": "Input JSON is empty or has no questions",
+        "possible_exception_or_signal": "ValueError / custom validation",
+        "recommended_handling": "Reject or produce defined empty result according to contract; no traceback.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-016",
+        "command": "search_dataset",
+        "stage": "input_file",
+        "case": "Input JSON is extremely large",
+        "possible_exception_or_signal": "MemoryError / resource exhaustion",
+        "recommended_handling": "Use reasonable size limits or streaming where possible; fail with helpful resource message.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-017",
+        "command": "search_dataset",
+        "stage": "input_file",
+        "case": "Input file changes or disappears between check and open",
+        "possible_exception_or_signal": "FileNotFoundError / OSError",
+        "recommended_handling": "Catch at actual open/read even after pre-check.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-018",
+        "command": "search_dataset",
+        "stage": "output",
+        "case": "Output directory cannot be created",
+        "possible_exception_or_signal": "PermissionError / OSError",
+        "recommended_handling": "Catch OSError around mkdir; include target path.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-019",
+        "command": "search_dataset",
+        "stage": "output",
+        "case": "Output parent is a file",
+        "possible_exception_or_signal": "FileExistsError / NotADirectoryError",
+        "recommended_handling": "Reject invalid directory hierarchy.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-020",
+        "command": "search_dataset",
+        "stage": "output",
+        "case": "Output file cannot be written or replaced",
+        "possible_exception_or_signal": "PermissionError / OSError",
+        "recommended_handling": "Catch OSError around write/replace and include output path.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-021",
+        "command": "search_dataset",
+        "stage": "output",
+        "case": "Disk full or quota exceeded",
+        "possible_exception_or_signal": "OSError: ENOSPC / EDQUOT",
+        "recommended_handling": "Report low storage/quota; clean up temporary file.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-022",
+        "command": "search_dataset",
+        "stage": "output",
+        "case": "File system becomes read-only or unavailable",
+        "possible_exception_or_signal": "OSError: EROFS / EIO",
+        "recommended_handling": "Report storage failure and avoid claiming successful save.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-023",
+        "command": "search_dataset",
+        "stage": "output",
+        "case": "Serialization fails",
+        "possible_exception_or_signal": "TypeError / ValueError",
+        "recommended_handling": "Validate data / use model_dump(mode=\"json\") before json.dump.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-024",
+        "command": "search_dataset",
+        "stage": "output",
+        "case": "Process interrupted during write",
+        "possible_exception_or_signal": "KeyboardInterrupt / OSError",
+        "recommended_handling": "Use temporary file + os.replace for atomic output, and cleanup on failure.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-025",
+        "command": "search_dataset",
+        "stage": "output",
+        "case": "Output path conflicts with input path",
+        "possible_exception_or_signal": "Application validation error",
+        "recommended_handling": "Reject accidental overwrite of input dataset unless intentionally supported.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-026",
+        "command": "search_dataset",
+        "stage": "retrieval",
+        "case": "Index files missing",
+        "possible_exception_or_signal": "FileNotFoundError / OSError",
+        "recommended_handling": "Tell user to run index first; verify saved artifacts.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-027",
+        "command": "search_dataset",
+        "stage": "retrieval",
+        "case": "Index corrupt or incompatible with bm25s version",
+        "possible_exception_or_signal": "ValueError / OSError / library-specific",
+        "recommended_handling": "Catch load error; recommend rebuilding index.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-028",
+        "command": "search_dataset",
+        "stage": "retrieval",
+        "case": "chunks.json missing, malformed, or schema inconsistent",
+        "possible_exception_or_signal": "OSError / JSONDecodeError / ValidationError",
+        "recommended_handling": "Validate chunk metadata and index/doc count.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-029",
+        "command": "search_dataset",
+        "stage": "retrieval",
+        "case": "Index and chunk mapping out of sync",
+        "possible_exception_or_signal": "IndexError / KeyError / application validation",
+        "recommended_handling": "Check retrieved document IDs map to the intended chunk; rebuild mismatched artifacts.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-030",
+        "command": "search_dataset",
+        "stage": "retrieval",
+        "case": "BM25 retrieve fails",
+        "possible_exception_or_signal": "ValueError / RuntimeError / library-specific",
+        "recommended_handling": "Surface retrieval-stage failure with log details.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-031",
+        "command": "search_dataset",
+        "stage": "retrieval",
+        "case": "Duplicate chunk content maps to wrong file",
+        "possible_exception_or_signal": "Logical validation failure (no exception)",
+        "recommended_handling": "Map search results via stable document indices, not only content string.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-032",
+        "command": "search_dataset",
+        "stage": "retrieval",
+        "case": "Returned source path/character positions invalid",
+        "possible_exception_or_signal": "pydantic.ValidationError / ValueError",
+        "recommended_handling": "Validate MinimalSource and ensure 0 <= first < last <= source length.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-033",
+        "command": "search_dataset",
+        "stage": "dataset_processing",
+        "case": "Duplicate question_id values",
+        "possible_exception_or_signal": "Application validation error",
+        "recommended_handling": "Detect duplicate IDs if downstream assumes uniqueness.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-034",
+        "command": "search_dataset",
+        "stage": "dataset_processing",
+        "case": "Missing question field or wrong type",
+        "possible_exception_or_signal": "pydantic.ValidationError",
+        "recommended_handling": "Validate each question with corresponding Pydantic model.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-035",
+        "command": "search_dataset",
+        "stage": "dataset_processing",
+        "case": "Question is blank or whitespace",
+        "possible_exception_or_signal": "Application validation error",
+        "recommended_handling": "Define per-question skip/record behavior, do not crash entire batch.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-036",
+        "command": "search_dataset",
+        "stage": "dataset_processing",
+        "case": "One record fails halfway through batch",
+        "possible_exception_or_signal": "Exception from processing",
+        "recommended_handling": "Track question_id, report per-item failure and define stop/continue policy.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-037",
+        "command": "search_dataset",
+        "stage": "dataset_processing",
+        "case": "Saved output fails expected Pydantic schema",
+        "possible_exception_or_signal": "pydantic.ValidationError",
+        "recommended_handling": "Validate StudentSearchResults or StudentSearchResultsAndAnswer before saving.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-038",
+        "command": "search_dataset",
+        "stage": "input_validation",
+        "case": "k is zero/negative or invalid type",
+        "possible_exception_or_signal": "ValueError / TypeError",
+        "recommended_handling": "Validate k >= 1 and integer.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-039",
+        "command": "search_dataset",
+        "stage": "input_validation",
+        "case": "k exceeds number of chunks",
+        "possible_exception_or_signal": "No exception",
+        "recommended_handling": "Limit actual BM25 retrieval count to available chunks.",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-040",
+        "command": "search_dataset",
+        "stage": "input_validation",
+        "case": "Dataset has wrong root key (rag_questions) or invalid items",
+        "possible_exception_or_signal": "pydantic.ValidationError",
+        "recommended_handling": "Validate input as RagDataset (and distinguish union types when needed).",
+        "severity": "error"
+      },
+      {
+        "id": "SEARCH_DATASET-041",
+        "command": "search_dataset",
+        "stage": "input_validation",
+        "case": "Dataset output already exists",
+        "possible_exception_or_signal": "No exception / OSError",
+        "recommended_handling": "Document overwrite policy; atomic replace to avoid partial results.",
+        "severity": "error"
+      }
+    ],
+    "answer": [
+      {
+        "id": "ANSWER-001",
+        "command": "answer",
+        "stage": "argument_parsing",
+        "case": "Missing required positional argument",
+        "possible_exception_or_signal": "Python Fire usage error",
+        "recommended_handling": "Let Fire show usage or normalize through an entrypoint wrapper; do not expect method-level try/except to run.",
+        "severity": "error",
+        "example_input": "uv run python -m src search"
+      },
+      {
+        "id": "ANSWER-002",
+        "command": "answer",
+        "stage": "argument_parsing",
+        "case": "Unknown command or argument",
+        "possible_exception_or_signal": "Python Fire usage error",
+        "recommended_handling": "Show supported commands/options and exit nonzero; validate unknown flags before dispatch where practical.",
+        "severity": "error",
+        "example_input": "uv run python -m src unknown_command"
+      },
+      {
+        "id": "ANSWER-003",
+        "command": "answer",
+        "stage": "argument_parsing",
+        "case": "Invalid option type (e.g. k=\"abc\")",
+        "possible_exception_or_signal": "TypeError / ValueError / Fire conversion behavior",
+        "recommended_handling": "Validate types explicitly at the command boundary and emit a friendly message.",
+        "severity": "error",
+        "example_input": "--k abc"
+      },
+      {
+        "id": "ANSWER-004",
+        "command": "answer",
+        "stage": "argument_parsing",
+        "case": "Shell treats next line as a new command",
+        "possible_exception_or_signal": "Shell command-not-found (outside Python)",
+        "recommended_handling": "Document single-line commands or use trailing backslashes; cannot be caught inside Python.",
+        "severity": "error",
+        "example_input": "uv run python -m src search_dataset\n--k 10"
+      },
+      {
+        "id": "ANSWER-005",
+        "command": "answer",
+        "stage": "execution",
+        "case": "User interrupts with Ctrl+C",
+        "possible_exception_or_signal": "KeyboardInterrupt",
+        "recommended_handling": "Catch at CLI boundary, print Interrupted, exit 130; ensure resources close.",
+        "severity": "error",
+        "example_input": "Ctrl+C"
+      },
+      {
+        "id": "ANSWER-006",
+        "command": "answer",
+        "stage": "execution",
+        "case": "Missing Python dependency or broken uv environment",
+        "possible_exception_or_signal": "ModuleNotFoundError / uv subprocess failure",
+        "recommended_handling": "Use uv sync; report installation error; failure may happen before CLI starts.",
+        "severity": "error",
+        "example_input": "uv run python -m src ..."
+      },
+      {
+        "id": "ANSWER-007",
+        "command": "answer",
+        "stage": "execution",
+        "case": "Unexpected internal bug",
+        "possible_exception_or_signal": "Unexpected Exception",
+        "recommended_handling": "Log full traceback to debug log; print concise error and exit nonzero; do not silently suppress programming bugs.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER-008",
+        "command": "answer",
+        "stage": "retrieval",
+        "case": "Index files missing",
+        "possible_exception_or_signal": "FileNotFoundError / OSError",
+        "recommended_handling": "Tell user to run index first; verify saved artifacts.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER-009",
+        "command": "answer",
+        "stage": "retrieval",
+        "case": "Index corrupt or incompatible with bm25s version",
+        "possible_exception_or_signal": "ValueError / OSError / library-specific",
+        "recommended_handling": "Catch load error; recommend rebuilding index.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER-010",
+        "command": "answer",
+        "stage": "retrieval",
+        "case": "chunks.json missing, malformed, or schema inconsistent",
+        "possible_exception_or_signal": "OSError / JSONDecodeError / ValidationError",
+        "recommended_handling": "Validate chunk metadata and index/doc count.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER-011",
+        "command": "answer",
+        "stage": "retrieval",
+        "case": "Index and chunk mapping out of sync",
+        "possible_exception_or_signal": "IndexError / KeyError / application validation",
+        "recommended_handling": "Check retrieved document IDs map to the intended chunk; rebuild mismatched artifacts.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER-012",
+        "command": "answer",
+        "stage": "retrieval",
+        "case": "BM25 retrieve fails",
+        "possible_exception_or_signal": "ValueError / RuntimeError / library-specific",
+        "recommended_handling": "Surface retrieval-stage failure with log details.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER-013",
+        "command": "answer",
+        "stage": "retrieval",
+        "case": "Duplicate chunk content maps to wrong file",
+        "possible_exception_or_signal": "Logical validation failure (no exception)",
+        "recommended_handling": "Map search results via stable document indices, not only content string.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER-014",
+        "command": "answer",
+        "stage": "retrieval",
+        "case": "Returned source path/character positions invalid",
+        "possible_exception_or_signal": "pydantic.ValidationError / ValueError",
+        "recommended_handling": "Validate MinimalSource and ensure 0 <= first < last <= source length.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER-015",
+        "command": "answer",
+        "stage": "generation",
+        "case": "Qwen model/tokenizer download unavailable",
+        "possible_exception_or_signal": "OSError / HTTP error",
+        "recommended_handling": "Report local cache/network/auth problem; enable offline use if cached.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER-016",
+        "command": "answer",
+        "stage": "generation",
+        "case": "Tokenizer/model config incompatible or corrupt",
+        "possible_exception_or_signal": "OSError / ValueError / RuntimeError",
+        "recommended_handling": "Report model loading failure and model name.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER-017",
+        "command": "answer",
+        "stage": "generation",
+        "case": "Not enough RAM/VRAM for model",
+        "possible_exception_or_signal": "MemoryError / RuntimeError",
+        "recommended_handling": "Show resource issue and how to reduce load.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER-018",
+        "command": "answer",
+        "stage": "generation",
+        "case": "Prompt plus snippets exceeds context window",
+        "possible_exception_or_signal": "ValueError / RuntimeError / shape error",
+        "recommended_handling": "Count tokens; truncate/select snippets to fit model input budget.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER-019",
+        "command": "answer",
+        "stage": "generation",
+        "case": "Generation gets stuck or excessively long",
+        "possible_exception_or_signal": "Timeout / time/resource limit (if implemented)",
+        "recommended_handling": "Set max_new_tokens and optional timeout/cancellation.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER-020",
+        "command": "answer",
+        "stage": "generation",
+        "case": "Model generate fails",
+        "possible_exception_or_signal": "RuntimeError / ValueError / model-specific",
+        "recommended_handling": "Catch at generator boundary, preserve detailed debug cause.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER-021",
+        "command": "answer",
+        "stage": "generation",
+        "case": "Model returns empty or unusable answer",
+        "possible_exception_or_signal": "Application validation error",
+        "recommended_handling": "Detect blank output and use documented fallback.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER-022",
+        "command": "answer",
+        "stage": "generation",
+        "case": "No retrieved context",
+        "possible_exception_or_signal": "No exception",
+        "recommended_handling": "Return grounded no-evidence response rather than inventing answer.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER-023",
+        "command": "answer",
+        "stage": "query_input",
+        "case": "Query missing, blank, or invalid type",
+        "possible_exception_or_signal": "ValueError / TypeError",
+        "recommended_handling": "Validate text at CLI boundary.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER-024",
+        "command": "answer",
+        "stage": "query_input",
+        "case": "k invalid (0, negative, float, str)",
+        "possible_exception_or_signal": "ValueError / TypeError",
+        "recommended_handling": "Require positive integer.",
+        "severity": "error"
+      }
+    ],
+    "answer_dataset": [
+      {
+        "id": "ANSWER_DATASET-001",
+        "command": "answer_dataset",
+        "stage": "argument_parsing",
+        "case": "Missing required positional argument",
+        "possible_exception_or_signal": "Python Fire usage error",
+        "recommended_handling": "Let Fire show usage or normalize through an entrypoint wrapper; do not expect method-level try/except to run.",
+        "severity": "error",
+        "example_input": "uv run python -m src search"
+      },
+      {
+        "id": "ANSWER_DATASET-002",
+        "command": "answer_dataset",
+        "stage": "argument_parsing",
+        "case": "Unknown command or argument",
+        "possible_exception_or_signal": "Python Fire usage error",
+        "recommended_handling": "Show supported commands/options and exit nonzero; validate unknown flags before dispatch where practical.",
+        "severity": "error",
+        "example_input": "uv run python -m src unknown_command"
+      },
+      {
+        "id": "ANSWER_DATASET-003",
+        "command": "answer_dataset",
+        "stage": "argument_parsing",
+        "case": "Invalid option type (e.g. k=\"abc\")",
+        "possible_exception_or_signal": "TypeError / ValueError / Fire conversion behavior",
+        "recommended_handling": "Validate types explicitly at the command boundary and emit a friendly message.",
+        "severity": "error",
+        "example_input": "--k abc"
+      },
+      {
+        "id": "ANSWER_DATASET-004",
+        "command": "answer_dataset",
+        "stage": "argument_parsing",
+        "case": "Shell treats next line as a new command",
+        "possible_exception_or_signal": "Shell command-not-found (outside Python)",
+        "recommended_handling": "Document single-line commands or use trailing backslashes; cannot be caught inside Python.",
+        "severity": "error",
+        "example_input": "uv run python -m src search_dataset\n--k 10"
+      },
+      {
+        "id": "ANSWER_DATASET-005",
+        "command": "answer_dataset",
+        "stage": "execution",
+        "case": "User interrupts with Ctrl+C",
+        "possible_exception_or_signal": "KeyboardInterrupt",
+        "recommended_handling": "Catch at CLI boundary, print Interrupted, exit 130; ensure resources close.",
+        "severity": "error",
+        "example_input": "Ctrl+C"
+      },
+      {
+        "id": "ANSWER_DATASET-006",
+        "command": "answer_dataset",
+        "stage": "execution",
+        "case": "Missing Python dependency or broken uv environment",
+        "possible_exception_or_signal": "ModuleNotFoundError / uv subprocess failure",
+        "recommended_handling": "Use uv sync; report installation error; failure may happen before CLI starts.",
+        "severity": "error",
+        "example_input": "uv run python -m src ..."
+      },
+      {
+        "id": "ANSWER_DATASET-007",
+        "command": "answer_dataset",
+        "stage": "execution",
+        "case": "Unexpected internal bug",
+        "possible_exception_or_signal": "Unexpected Exception",
+        "recommended_handling": "Log full traceback to debug log; print concise error and exit nonzero; do not silently suppress programming bugs.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-008",
+        "command": "answer_dataset",
+        "stage": "input_file",
+        "case": "Missing required path",
+        "possible_exception_or_signal": "FileNotFoundError or pathlib.exists() == False",
+        "recommended_handling": "Reject with exact path before reading.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-009",
+        "command": "answer_dataset",
+        "stage": "input_file",
+        "case": "Path points to directory instead of file",
+        "possible_exception_or_signal": "IsADirectoryError",
+        "recommended_handling": "Check is_file() and give expected type.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-010",
+        "command": "answer_dataset",
+        "stage": "input_file",
+        "case": "Path points to file instead of directory",
+        "possible_exception_or_signal": "NotADirectoryError",
+        "recommended_handling": "Check is_dir() and give expected type.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-011",
+        "command": "answer_dataset",
+        "stage": "input_file",
+        "case": "Cannot read due to permissions",
+        "possible_exception_or_signal": "PermissionError (OSError)",
+        "recommended_handling": "Catch OSError around open/read; show path and OS detail.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-012",
+        "command": "answer_dataset",
+        "stage": "input_file",
+        "case": "Input is malformed JSON",
+        "possible_exception_or_signal": "json.JSONDecodeError",
+        "recommended_handling": "Catch JSONDecodeError, show location (line/column) and file.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-013",
+        "command": "answer_dataset",
+        "stage": "input_file",
+        "case": "Input contains invalid UTF-8",
+        "possible_exception_or_signal": "UnicodeDecodeError",
+        "recommended_handling": "Catch UnicodeError or UnicodeDecodeError, show file.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-014",
+        "command": "answer_dataset",
+        "stage": "input_file",
+        "case": "Input JSON has valid syntax but wrong schema",
+        "possible_exception_or_signal": "pydantic.ValidationError",
+        "recommended_handling": "Validate with model_validate or model_validate_json; show field path and a short description.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-015",
+        "command": "answer_dataset",
+        "stage": "input_file",
+        "case": "Input JSON is empty or has no questions",
+        "possible_exception_or_signal": "ValueError / custom validation",
+        "recommended_handling": "Reject or produce defined empty result according to contract; no traceback.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-016",
+        "command": "answer_dataset",
+        "stage": "input_file",
+        "case": "Input JSON is extremely large",
+        "possible_exception_or_signal": "MemoryError / resource exhaustion",
+        "recommended_handling": "Use reasonable size limits or streaming where possible; fail with helpful resource message.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-017",
+        "command": "answer_dataset",
+        "stage": "input_file",
+        "case": "Input file changes or disappears between check and open",
+        "possible_exception_or_signal": "FileNotFoundError / OSError",
+        "recommended_handling": "Catch at actual open/read even after pre-check.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-018",
+        "command": "answer_dataset",
+        "stage": "output",
+        "case": "Output directory cannot be created",
+        "possible_exception_or_signal": "PermissionError / OSError",
+        "recommended_handling": "Catch OSError around mkdir; include target path.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-019",
+        "command": "answer_dataset",
+        "stage": "output",
+        "case": "Output parent is a file",
+        "possible_exception_or_signal": "FileExistsError / NotADirectoryError",
+        "recommended_handling": "Reject invalid directory hierarchy.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-020",
+        "command": "answer_dataset",
+        "stage": "output",
+        "case": "Output file cannot be written or replaced",
+        "possible_exception_or_signal": "PermissionError / OSError",
+        "recommended_handling": "Catch OSError around write/replace and include output path.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-021",
+        "command": "answer_dataset",
+        "stage": "output",
+        "case": "Disk full or quota exceeded",
+        "possible_exception_or_signal": "OSError: ENOSPC / EDQUOT",
+        "recommended_handling": "Report low storage/quota; clean up temporary file.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-022",
+        "command": "answer_dataset",
+        "stage": "output",
+        "case": "File system becomes read-only or unavailable",
+        "possible_exception_or_signal": "OSError: EROFS / EIO",
+        "recommended_handling": "Report storage failure and avoid claiming successful save.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-023",
+        "command": "answer_dataset",
+        "stage": "output",
+        "case": "Serialization fails",
+        "possible_exception_or_signal": "TypeError / ValueError",
+        "recommended_handling": "Validate data / use model_dump(mode=\"json\") before json.dump.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-024",
+        "command": "answer_dataset",
+        "stage": "output",
+        "case": "Process interrupted during write",
+        "possible_exception_or_signal": "KeyboardInterrupt / OSError",
+        "recommended_handling": "Use temporary file + os.replace for atomic output, and cleanup on failure.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-025",
+        "command": "answer_dataset",
+        "stage": "output",
+        "case": "Output path conflicts with input path",
+        "possible_exception_or_signal": "Application validation error",
+        "recommended_handling": "Reject accidental overwrite of input dataset unless intentionally supported.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-026",
+        "command": "answer_dataset",
+        "stage": "dataset_processing",
+        "case": "Duplicate question_id values",
+        "possible_exception_or_signal": "Application validation error",
+        "recommended_handling": "Detect duplicate IDs if downstream assumes uniqueness.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-027",
+        "command": "answer_dataset",
+        "stage": "dataset_processing",
+        "case": "Missing question field or wrong type",
+        "possible_exception_or_signal": "pydantic.ValidationError",
+        "recommended_handling": "Validate each question with corresponding Pydantic model.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-028",
+        "command": "answer_dataset",
+        "stage": "dataset_processing",
+        "case": "Question is blank or whitespace",
+        "possible_exception_or_signal": "Application validation error",
+        "recommended_handling": "Define per-question skip/record behavior, do not crash entire batch.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-029",
+        "command": "answer_dataset",
+        "stage": "dataset_processing",
+        "case": "One record fails halfway through batch",
+        "possible_exception_or_signal": "Exception from processing",
+        "recommended_handling": "Track question_id, report per-item failure and define stop/continue policy.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-030",
+        "command": "answer_dataset",
+        "stage": "dataset_processing",
+        "case": "Saved output fails expected Pydantic schema",
+        "possible_exception_or_signal": "pydantic.ValidationError",
+        "recommended_handling": "Validate StudentSearchResults or StudentSearchResultsAndAnswer before saving.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-031",
+        "command": "answer_dataset",
+        "stage": "generation",
+        "case": "Qwen model/tokenizer download unavailable",
+        "possible_exception_or_signal": "OSError / HTTP error",
+        "recommended_handling": "Report local cache/network/auth problem; enable offline use if cached.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-032",
+        "command": "answer_dataset",
+        "stage": "generation",
+        "case": "Tokenizer/model config incompatible or corrupt",
+        "possible_exception_or_signal": "OSError / ValueError / RuntimeError",
+        "recommended_handling": "Report model loading failure and model name.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-033",
+        "command": "answer_dataset",
+        "stage": "generation",
+        "case": "Not enough RAM/VRAM for model",
+        "possible_exception_or_signal": "MemoryError / RuntimeError",
+        "recommended_handling": "Show resource issue and how to reduce load.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-034",
+        "command": "answer_dataset",
+        "stage": "generation",
+        "case": "Prompt plus snippets exceeds context window",
+        "possible_exception_or_signal": "ValueError / RuntimeError / shape error",
+        "recommended_handling": "Count tokens; truncate/select snippets to fit model input budget.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-035",
+        "command": "answer_dataset",
+        "stage": "generation",
+        "case": "Generation gets stuck or excessively long",
+        "possible_exception_or_signal": "Timeout / time/resource limit (if implemented)",
+        "recommended_handling": "Set max_new_tokens and optional timeout/cancellation.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-036",
+        "command": "answer_dataset",
+        "stage": "generation",
+        "case": "Model generate fails",
+        "possible_exception_or_signal": "RuntimeError / ValueError / model-specific",
+        "recommended_handling": "Catch at generator boundary, preserve detailed debug cause.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-037",
+        "command": "answer_dataset",
+        "stage": "generation",
+        "case": "Model returns empty or unusable answer",
+        "possible_exception_or_signal": "Application validation error",
+        "recommended_handling": "Detect blank output and use documented fallback.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-038",
+        "command": "answer_dataset",
+        "stage": "generation",
+        "case": "No retrieved context",
+        "possible_exception_or_signal": "No exception",
+        "recommended_handling": "Return grounded no-evidence response rather than inventing answer.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-039",
+        "command": "answer_dataset",
+        "stage": "source_input",
+        "case": "Input is StudentSearchResults rather than expected dataset",
+        "possible_exception_or_signal": "pydantic.ValidationError",
+        "recommended_handling": "Validate as StudentSearchResults; reject unrelated input structures.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-040",
+        "command": "answer_dataset",
+        "stage": "source_input",
+        "case": "retrieved_sources absent or malformed",
+        "possible_exception_or_signal": "pydantic.ValidationError",
+        "recommended_handling": "Validate list of MinimalSource; reject negative/invalid locations where applicable.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-041",
+        "command": "answer_dataset",
+        "stage": "source_input",
+        "case": "Source file referenced in result no longer exists",
+        "possible_exception_or_signal": "FileNotFoundError",
+        "recommended_handling": "Handle missing source; decide skip question vs fail batch.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-042",
+        "command": "answer_dataset",
+        "stage": "source_input",
+        "case": "Source path points outside allowed corpus",
+        "possible_exception_or_signal": "Application validation error",
+        "recommended_handling": "Enforce project corpus root before reading source paths.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-043",
+        "command": "answer_dataset",
+        "stage": "source_input",
+        "case": "Character indices out of file bounds",
+        "possible_exception_or_signal": "ValueError",
+        "recommended_handling": "Check bounds before slicing.",
+        "severity": "error"
+      },
+      {
+        "id": "ANSWER_DATASET-044",
+        "command": "answer_dataset",
+        "stage": "source_input",
+        "case": "Question text and source data inconsistent",
+        "possible_exception_or_signal": "Application validation error",
+        "recommended_handling": "Reject or warn; avoid silently generating from mismatched evidence.",
+        "severity": "error"
+      }
+    ],
+    "evaluate": [
+      {
+        "id": "EVALUATE-001",
+        "command": "evaluate",
+        "stage": "argument_parsing",
+        "case": "Missing required positional argument",
+        "possible_exception_or_signal": "Python Fire usage error",
+        "recommended_handling": "Let Fire show usage or normalize through an entrypoint wrapper; do not expect method-level try/except to run.",
+        "severity": "error",
+        "example_input": "uv run python -m src search"
+      },
+      {
+        "id": "EVALUATE-002",
+        "command": "evaluate",
+        "stage": "argument_parsing",
+        "case": "Unknown command or argument",
+        "possible_exception_or_signal": "Python Fire usage error",
+        "recommended_handling": "Show supported commands/options and exit nonzero; validate unknown flags before dispatch where practical.",
+        "severity": "error",
+        "example_input": "uv run python -m src unknown_command"
+      },
+      {
+        "id": "EVALUATE-003",
+        "command": "evaluate",
+        "stage": "argument_parsing",
+        "case": "Invalid option type (e.g. k=\"abc\")",
+        "possible_exception_or_signal": "TypeError / ValueError / Fire conversion behavior",
+        "recommended_handling": "Validate types explicitly at the command boundary and emit a friendly message.",
+        "severity": "error",
+        "example_input": "--k abc"
+      },
+      {
+        "id": "EVALUATE-004",
+        "command": "evaluate",
+        "stage": "argument_parsing",
+        "case": "Shell treats next line as a new command",
+        "possible_exception_or_signal": "Shell command-not-found (outside Python)",
+        "recommended_handling": "Document single-line commands or use trailing backslashes; cannot be caught inside Python.",
+        "severity": "error",
+        "example_input": "uv run python -m src search_dataset\n--k 10"
+      },
+      {
+        "id": "EVALUATE-005",
+        "command": "evaluate",
+        "stage": "execution",
+        "case": "User interrupts with Ctrl+C",
+        "possible_exception_or_signal": "KeyboardInterrupt",
+        "recommended_handling": "Catch at CLI boundary, print Interrupted, exit 130; ensure resources close.",
+        "severity": "error",
+        "example_input": "Ctrl+C"
+      },
+      {
+        "id": "EVALUATE-006",
+        "command": "evaluate",
+        "stage": "execution",
+        "case": "Missing Python dependency or broken uv environment",
+        "possible_exception_or_signal": "ModuleNotFoundError / uv subprocess failure",
+        "recommended_handling": "Use uv sync; report installation error; failure may happen before CLI starts.",
+        "severity": "error",
+        "example_input": "uv run python -m src ..."
+      },
+      {
+        "id": "EVALUATE-007",
+        "command": "evaluate",
+        "stage": "execution",
+        "case": "Unexpected internal bug",
+        "possible_exception_or_signal": "Unexpected Exception",
+        "recommended_handling": "Log full traceback to debug log; print concise error and exit nonzero; do not silently suppress programming bugs.",
+        "severity": "error"
+      },
+      {
+        "id": "EVALUATE-008",
+        "command": "evaluate",
+        "stage": "input_file",
+        "case": "Missing required path",
+        "possible_exception_or_signal": "FileNotFoundError or pathlib.exists() == False",
+        "recommended_handling": "Reject with exact path before reading.",
+        "severity": "error"
+      },
+      {
+        "id": "EVALUATE-009",
+        "command": "evaluate",
+        "stage": "input_file",
+        "case": "Path points to directory instead of file",
+        "possible_exception_or_signal": "IsADirectoryError",
+        "recommended_handling": "Check is_file() and give expected type.",
+        "severity": "error"
+      },
+      {
+        "id": "EVALUATE-010",
+        "command": "evaluate",
+        "stage": "input_file",
+        "case": "Path points to file instead of directory",
+        "possible_exception_or_signal": "NotADirectoryError",
+        "recommended_handling": "Check is_dir() and give expected type.",
+        "severity": "error"
+      },
+      {
+        "id": "EVALUATE-011",
+        "command": "evaluate",
+        "stage": "input_file",
+        "case": "Cannot read due to permissions",
+        "possible_exception_or_signal": "PermissionError (OSError)",
+        "recommended_handling": "Catch OSError around open/read; show path and OS detail.",
+        "severity": "error"
+      },
+      {
+        "id": "EVALUATE-012",
+        "command": "evaluate",
+        "stage": "input_file",
+        "case": "Input is malformed JSON",
+        "possible_exception_or_signal": "json.JSONDecodeError",
+        "recommended_handling": "Catch JSONDecodeError, show location (line/column) and file.",
+        "severity": "error"
+      },
+      {
+        "id": "EVALUATE-013",
+        "command": "evaluate",
+        "stage": "input_file",
+        "case": "Input contains invalid UTF-8",
+        "possible_exception_or_signal": "UnicodeDecodeError",
+        "recommended_handling": "Catch UnicodeError or UnicodeDecodeError, show file.",
+        "severity": "error"
+      },
+      {
+        "id": "EVALUATE-014",
+        "command": "evaluate",
+        "stage": "input_file",
+        "case": "Input JSON has valid syntax but wrong schema",
+        "possible_exception_or_signal": "pydantic.ValidationError",
+        "recommended_handling": "Validate with model_validate or model_validate_json; show field path and a short description.",
+        "severity": "error"
+      },
+      {
+        "id": "EVALUATE-015",
+        "command": "evaluate",
+        "stage": "input_file",
+        "case": "Input JSON is empty or has no questions",
+        "possible_exception_or_signal": "ValueError / custom validation",
+        "recommended_handling": "Reject or produce defined empty result according to contract; no traceback.",
+        "severity": "error"
+      },
+      {
+        "id": "EVALUATE-016",
+        "command": "evaluate",
+        "stage": "input_file",
+        "case": "Input JSON is extremely large",
+        "possible_exception_or_signal": "MemoryError / resource exhaustion",
+        "recommended_handling": "Use reasonable size limits or streaming where possible; fail with helpful resource message.",
+        "severity": "error"
+      },
+      {
+        "id": "EVALUATE-017",
+        "command": "evaluate",
+        "stage": "input_file",
+        "case": "Input file changes or disappears between check and open",
+        "possible_exception_or_signal": "FileNotFoundError / OSError",
+        "recommended_handling": "Catch at actual open/read even after pre-check.",
+        "severity": "error"
+      },
+      {
+        "id": "EVALUATE-018",
+        "command": "evaluate",
+        "stage": "evaluation",
+        "case": "Student results/ground truth paths missing or swapped",
+        "possible_exception_or_signal": "FileNotFoundError / ValidationError",
+        "recommended_handling": "Validate each input schema independently and show expected argument order.",
+        "severity": "error"
+      },
+      {
+        "id": "EVALUATE-019",
+        "command": "evaluate",
+        "stage": "evaluation",
+        "case": "Question IDs do not match ground truth",
+        "possible_exception_or_signal": "Application validation error",
+        "recommended_handling": "Report missing/extra IDs and choose explicit scoring policy.",
+        "severity": "error"
+      },
+      {
+        "id": "EVALUATE-020",
+        "command": "evaluate",
+        "stage": "evaluation",
+        "case": "k does not match retrieved list or expected cutoff",
+        "possible_exception_or_signal": "ValueError / application validation",
+        "recommended_handling": "Validate k and ranking list length according to evaluation contract.",
+        "severity": "error"
+      },
+      {
+        "id": "EVALUATE-021",
+        "command": "evaluate",
+        "stage": "evaluation",
+        "case": "Source file_path mismatches corpus prefix",
+        "possible_exception_or_signal": "Logical scoring failure",
+        "recommended_handling": "Use exact corpus-relative path; do not rewrite before scoring.",
+        "severity": "error"
+      },
+      {
+        "id": "EVALUATE-022",
+        "command": "evaluate",
+        "stage": "evaluation",
+        "case": "Source span has invalid bounds or exceeds 2000",
+        "possible_exception_or_signal": "ValueError / application validation",
+        "recommended_handling": "Validate ranges; max retrieved source span 2000.",
+        "severity": "error"
+      },
+      {
+        "id": "EVALUATE-023",
+        "command": "evaluate",
+        "stage": "evaluation",
+        "case": "No questions or no ground truth sources",
+        "possible_exception_or_signal": "ZeroDivisionError risk / application validation",
+        "recommended_handling": "Handle zero denominator and empty sets explicitly.",
+        "severity": "error"
+      },
+      {
+        "id": "EVALUATE-024",
+        "command": "evaluate",
+        "stage": "evaluation",
+        "case": "Malformed source spans break IoU/overlap computation",
+        "possible_exception_or_signal": "ValueError / ZeroDivisionError risk",
+        "recommended_handling": "Check 0 <= start < end before overlap calculation.",
+        "severity": "error"
+      },
+      {
+        "id": "EVALUATE-025",
+        "command": "evaluate",
+        "stage": "evaluation",
+        "case": "Output console pipe closes (e.g. | head)",
+        "possible_exception_or_signal": "BrokenPipeError (OSError)",
+        "recommended_handling": "Catch optionally at entrypoint; exit quietly.",
+        "severity": "error"
+      }
+    ]
+  }
+}

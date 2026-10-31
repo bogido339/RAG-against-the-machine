@@ -3,13 +3,6 @@ from src.retriever import Retriever, DatasetRetriever
 from src.generator import Generator, DatasetGenerator
 from src.evaluator import Evaluator
 
-from src.models import (
-    MinimalAnswer,
-    MinimalSource,
-    StudentSearchResults,
-    StudentSearchResultsAndAnswer,
-)
-
 
 class RagCLI:
     """Command-Line Interface for the RAG pipeline."""

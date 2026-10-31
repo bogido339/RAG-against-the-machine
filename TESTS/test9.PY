@@ -1,1 +1,3 @@
-print(12)
+x = "...".strip()
+
+print(x)

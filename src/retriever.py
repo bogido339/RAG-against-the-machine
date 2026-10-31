@@ -42,13 +42,32 @@ class Retriever:
             raise RetrieverError("Cannot read chunks JSON.")
         except (KeyError, TypeError):
             raise RetrieverError("Invalid chunk structure.")
+        
+    def _validate_input(self, query: str, top_k: int) -> None:
+        """Validate search input and handle errors."""
+        try:
+            if not isinstance(query, str):
+                raise RetrieverError("Query must be a string.")
+
+            if not query.strip():
+                raise RetrieverError("Query must not be empty.")
+
+            if not isinstance(top_k, int):
+                raise RetrieverError("top_k must be an integer.")
+
+            if top_k <= 0:
+                raise RetrieverError("top_k must be a positive integer.")
+
+        except RetrieverError:
+            raise
+
+        except Exception as error:
+            raise RetrieverError(f"Invalid search input: {error}")
+
 
     def search(self, query: str, top_k: int = 3) -> List[Dict[str, Any]]:
         """Return at most top_k unique source locations."""
-        if not query.strip():
-            raise RetrieverError("Query must not be empty.")
-        if not isinstance(top_k, int) or top_k <= 0:
-            raise RetrieverError("top_k must be a positive integer.")
+        self._validate_input(query, top_k)
 
         results, _ = self.retriever.retrieve(
             bm25s.tokenize(query),

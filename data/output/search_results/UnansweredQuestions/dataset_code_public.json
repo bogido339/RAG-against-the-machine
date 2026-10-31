@@ -5149,37 +5149,17 @@
         },
         {
             "question_id": "f9d7bb96-a32b-4caf-86a0-158a821354c4",
-            "question": "What is the default value of the cutlass_block_fp8_supported parameter in apply_w8a8_block_fp8_linear?",
+            "question": "waht is rag",
             "retrieved_sources": [
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/utils/fp8_utils.py",
-                    "first_character_index": 3792,
-                    "last_character_index": 5717
+                    "file_path": "data/raw/vllm-0.10.1/examples/online_serving/retrieval_augmented_generation_with_langchain.py",
+                    "first_character_index": 0,
+                    "last_character_index": 1719
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/fp8.py",
-                    "first_character_index": 19428,
-                    "last_character_index": 21082
-                },
-                {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/utils/fp8_utils.py",
-                    "first_character_index": 6695,
-                    "last_character_index": 8679
-                },
-                {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/utils/w8a8_utils.py",
-                    "first_character_index": 1694,
-                    "last_character_index": 3487
-                },
-                {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/entrypoints/openai/protocol.py",
-                    "first_character_index": 72851,
-                    "last_character_index": 74824
-                },
-                {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/benchmarks/serve.py",
-                    "first_character_index": 34976,
-                    "last_character_index": 36715
+                    "file_path": "data/raw/vllm-0.10.1/docs/models/pooling_models.md",
+                    "first_character_index": 3820,
+                    "last_character_index": 5739
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/entrypoints/openai/protocol.py",
@@ -5187,19 +5167,39 @@
                     "last_character_index": 18795
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/benchmarks/benchmark_serving.py",
-                    "first_character_index": 44407,
-                    "last_character_index": 46320
+                    "file_path": "data/raw/vllm-0.10.1/examples/online_serving/retrieval_augmented_generation_with_llamaindex.py",
+                    "first_character_index": 0,
+                    "last_character_index": 1617
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/compressed_tensors/compressed_tensors_moe.py",
-                    "first_character_index": 8514,
-                    "last_character_index": 10333
+                    "file_path": "data/raw/vllm-0.10.1/docs/deployment/frameworks/haystack.md",
+                    "first_character_index": 0,
+                    "last_character_index": 690
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/entrypoints/openai/tool_parsers/qwen3coder_tool_parser.py",
-                    "first_character_index": 8054,
-                    "last_character_index": 9547
+                    "file_path": "data/raw/vllm-0.10.1/vllm/entrypoints/openai/serving_score.py",
+                    "first_character_index": 12937,
+                    "last_character_index": 14737
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/tests/models/language/pooling/test_gritlm.py",
+                    "first_character_index": 3691,
+                    "last_character_index": 4796
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/deployment/frameworks/open-webui.md",
+                    "first_character_index": 0,
+                    "last_character_index": 1380
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/examples/online_serving/retrieval_augmented_generation_with_langchain.py",
+                    "first_character_index": 3892,
+                    "last_character_index": 5643
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/deployment/frameworks/retrieval_augmented_generation.md",
+                    "first_character_index": 0,
+                    "last_character_index": 1741
                 }
             ]
         },
