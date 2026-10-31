@@ -100,7 +100,7 @@ class Retriever:
                 last_character_index=location[2]
             )
 
-            sources.append(source.model_dump())
+            sources.append(source)
 
             if len(sources) >= top_k:
                 break
@@ -111,9 +111,9 @@ class Retriever:
         """Print retrieved source locations."""
         for source in self.search(query, top_k):
             print(
-                f"{source['file_path']} "
-                f"[{source['first_character_index']}:"
-                f"{source['last_character_index']}]"
+                f"{source.file_path} "
+                f"[{source.first_character_index}:"
+                f"{source.last_character_index}]"
             )
 
 
@@ -138,7 +138,7 @@ class DatasetRetriever:
             dataset = RagDataset.model_validate(dataset)
 
             results = []
-            for idx, query in enumerate(dataset.rag_questions, start=1):
+            for idx, query in enumerate(dataset.rag_questions[:5], start=1):
                 try:
                     results.append({
                         "question_id": query.question_id,

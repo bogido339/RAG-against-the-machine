@@ -56,12 +56,14 @@ class Generator:
         chunks = []
 
         for source in sources:
-            file_path = Path(source["file_path"])
+            print(type(source))
+            print("*" * 80)
+            file_path = Path(source.file_path)
 
             content = file_path.read_text(encoding="utf-8")
     
-            start = source["first_character_index"]
-            end = source["last_character_index"]
+            start = source.first_character_index
+            end = source.last_character_index
 
             chunks.append(content[start:end])
 
@@ -101,11 +103,9 @@ class DatasetGenerator:
     def __init__(self):
         self.generator = Generator()
 
-    def answer_dataset(
-            self, student_search_results_path: str, save_directory: str
-    ) -> None:
-        """Generate answers from existing search results."""
-        input_path = Path(student_search_results_path)
+    def _load_search_results(
+            self, input_path: Path
+    ) -> StudentSearchResults:
         
         if not input_path.exists():
             raise DatasetGeneratorError(
@@ -133,8 +133,14 @@ class DatasetGenerator:
                 f"The file contains invalid JSON. Details: {e}"
             )
 
-        
+        return data
+    
+    def _process_dataset(
+            self, data: StudentSearchResults
+    ) -> StudentSearchResultsAndAnswer:
+
         results = []
+
         try:
             for query in tqdm(data.search_results):
                 try:
@@ -142,8 +148,8 @@ class DatasetGenerator:
                     question = query.question
                     retrieved_sources = query.retrieved_sources
 
-                    chunks = self.generator._load_chunks(retrieved_sources)
-                    answer = self.generator.generate(question, chunks)
+                    answer = self.generator.generate(question, retrieved_sources)
+                    print("generate the enswer pass")
 
                     results.append(
                         {
@@ -163,12 +169,11 @@ class DatasetGenerator:
                 k=data.k
             )
 
-            self._save(output, input_path, Path(save_directory))
-                    
+            return output
+
         except Exception as e:
             raise DatasetGeneratorError(
-                f"Critical error while processing or saving dataset for "
-                f"'{input_path}': {e}")
+                f"Critical error while processing dataset: {e}")
 
     def _save(
         self, data: Dict[str, Any], input_path: Path, save_directory: Path
@@ -188,3 +193,22 @@ class DatasetGenerator:
         except OSError as e:
             raise DatasetGeneratorError(
                 f"Failed to save dataset to '{output_path}': {e}")
+        
+
+    def answer_dataset(
+            self,student_search_results_path: str,save_directory: str
+    ) -> None:
+        input_path = Path(student_search_results_path)
+        data = self._load_search_results(input_path)
+
+        try:
+            print("start prossing hear")
+            output = self._process_dataset(data)
+            print("process dataset is pass")
+            self._save(output, input_path, Path(save_directory))
+            print("saving pass")
+
+        except Exception as e:
+            raise DatasetGeneratorError(
+                f"Critical error while processing or saving dataset for "
+                f"'{input_path}': {e}")
