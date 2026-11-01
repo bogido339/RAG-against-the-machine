@@ -56,8 +56,6 @@ class Generator:
         chunks = []
 
         for source in sources:
-            print(type(source))
-            print("*" * 80)
             file_path = Path(source.file_path)
 
             content = file_path.read_text(encoding="utf-8")
@@ -149,7 +147,6 @@ class DatasetGenerator:
                     retrieved_sources = query.retrieved_sources
 
                     answer = self.generator.generate(question, retrieved_sources)
-                    print("generate the enswer pass")
 
                     results.append(
                         {
@@ -202,11 +199,8 @@ class DatasetGenerator:
         data = self._load_search_results(input_path)
 
         try:
-            print("start prossing hear")
             output = self._process_dataset(data)
-            print("process dataset is pass")
             self._save(output, input_path, Path(save_directory))
-            print("saving pass")
 
         except Exception as e:
             raise DatasetGeneratorError(

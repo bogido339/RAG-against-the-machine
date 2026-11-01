@@ -1,14 +1,15 @@
 MAIN = src
-
+FLAG = index
+ARGS = 2000
 
 install:
 	uv sync
 
 run:
-	uv run python -m $(MAIN)
+	uv run python -m $(MAIN) $(FLAG) $(ARGS)
 
 debug:
-	uv run python -m pdb $(MAIN)
+	uv run python -m pdb -m $(MAIN) $(FLAG) $(ARGS)
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +

@@ -1,0 +1,712 @@
+py cli_errors.py 
+PASS INDEX-002              index --bogus=1  (rc=2) 
+PASS INDEX-002              unknown_command  (rc=2) 
+FAIL INDEX-003              index --max_chunk_size=abc  (rc=1) traceback leaked
+     |     indexer = Indexer(max_chunk_size)
+     |   File "/goinfre/mbougajd/RAG/src/indexer.py", line 23, in __init__
+     |     raise IndexerError(
+     |         "max_chunk_size must be a positive integer between 1 and 2000"
+     |     )
+     | src.error_classes.IndexerError: max_chunk_size must be a positive integer between 1 and 2000
+FAIL INDEX-005              index  (rc=130) traceback leaked
+     |     @register_meta([aten.scatter_reduce.two, aten.scatter_reduce.two_out])
+     |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/.venv/lib/python3.13/site-packages/torch/_ops.py", line 1325, in __getattr__
+     |     setattr(self, key, overload)
+     |     ~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+     | KeyboardInterrupt
+PASS INDEX-006              index  (rc=1) 
+FAIL INDEX-008              index  (rc=1) traceback leaked
+     |     self.output_directory.mkdir(parents=True, exist_ok=True)
+     |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/opt/pyenv/versions/3.13.1/lib/python3.13/pathlib/_local.py", line 722, in mkdir
+     |     os.mkdir(self, mode)
+     |     ~~~~~~~~^^^^^^^^^^^^
+     | PermissionError: [Errno 13] Permission denied: 'data/processed'
+FAIL INDEX-009              index  (rc=1) traceback leaked
+     |     self.output_directory.mkdir(parents=True, exist_ok=True)
+     |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/opt/pyenv/versions/3.13.1/lib/python3.13/pathlib/_local.py", line 722, in mkdir
+     |     os.mkdir(self, mode)
+     |     ~~~~~~~~^^^^^^^^^^^^
+     | FileExistsError: [Errno 17] File exists: 'data/processed'
+FAIL INDEX-016              index  (rc=1) traceback leaked
+     |     ~~~~~~~~~~~~~~~~~~~^^
+     |   File "/goinfre/mbougajd/RAG/src/indexer.py", line 186, in build_index
+     |     files = self._find_files()
+     |   File "/goinfre/mbougajd/RAG/src/indexer.py", line 118, in _find_files
+     |     raise IndexerError(f"Source directory not found: {self.source_directory}")
+     | src.error_classes.IndexerError: Source directory not found: data/raw/vllm-0.10.1
+FAIL INDEX-017              index  (rc=1) traceback leaked
+     |     ~~~~~~~~~~~~~~~~~~~^^
+     |   File "/goinfre/mbougajd/RAG/src/indexer.py", line 186, in build_index
+     |     files = self._find_files()
+     |   File "/goinfre/mbougajd/RAG/src/indexer.py", line 118, in _find_files
+     |     raise IndexerError(f"Source directory not found: {self.source_directory}")
+     | src.error_classes.IndexerError: Source directory not found: data/raw/vllm-0.10.1
+FAIL INDEX-018              index  (rc=1) traceback leaked
+     |     self.stat(follow_symlinks=follow_symlinks)
+     |     ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/opt/pyenv/versions/3.13.1/lib/python3.13/pathlib/_local.py", line 515, in stat
+     |     return os.stat(self, follow_symlinks=follow_symlinks)
+     |            ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     | PermissionError: [Errno 13] Permission denied: 'data/raw/vllm-0.10.1'
+PASS INDEX-019              index  (rc=0) 
+FAIL INDEX-021              index --max_chunk_size=0  (rc=1) traceback leaked
+     |     indexer = Indexer(max_chunk_size)
+     |   File "/goinfre/mbougajd/RAG/src/indexer.py", line 23, in __init__
+     |     raise IndexerError(
+     |         "max_chunk_size must be a positive integer between 1 and 2000"
+     |     )
+     | src.error_classes.IndexerError: max_chunk_size must be a positive integer between 1 and 2000
+FAIL INDEX-021              index --max_chunk_size=-5  (rc=1) traceback leaked
+     |     indexer = Indexer(max_chunk_size)
+     |   File "/goinfre/mbougajd/RAG/src/indexer.py", line 23, in __init__
+     |     raise IndexerError(
+     |         "max_chunk_size must be a positive integer between 1 and 2000"
+     |     )
+     | src.error_classes.IndexerError: max_chunk_size must be a positive integer between 1 and 2000
+FAIL INDEX-022              index --max_chunk_size=2001  (rc=1) traceback leaked
+     |     indexer = Indexer(max_chunk_size)
+     |   File "/goinfre/mbougajd/RAG/src/indexer.py", line 23, in __init__
+     |     raise IndexerError(
+     |         "max_chunk_size must be a positive integer between 1 and 2000"
+     |     )
+     | src.error_classes.IndexerError: max_chunk_size must be a positive integer between 1 and 2000
+FAIL INDEX-023              index --max_chunk_size=1.5  (rc=1) traceback leaked
+     |     indexer = Indexer(max_chunk_size)
+     |   File "/goinfre/mbougajd/RAG/src/indexer.py", line 23, in __init__
+     |     raise IndexerError(
+     |         "max_chunk_size must be a positive integer between 1 and 2000"
+     |     )
+     | src.error_classes.IndexerError: max_chunk_size must be a positive integer between 1 and 2000
+FAIL INDEX-023              index --max_chunk_size=True  (rc=1) traceback leaked
+     |     retriever.index(corpus_tokens)
+     |     ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/.venv/lib/python3.13/site-packages/bm25s/__init__.py", line 564, in index
+     |     vocab_dict[""] = max(vocab_dict.values()) + 1
+     |                      ~~~^^^^^^^^^^^^^^^^^^^^^
+     | ValueError: max() iterable argument is empty
+FAIL INDEX-023              index --max_chunk_size=abc  (rc=1) traceback leaked
+     |     indexer = Indexer(max_chunk_size)
+     |   File "/goinfre/mbougajd/RAG/src/indexer.py", line 23, in __init__
+     |     raise IndexerError(
+     |         "max_chunk_size must be a positive integer between 1 and 2000"
+     |     )
+     | src.error_classes.IndexerError: max_chunk_size must be a positive integer between 1 and 2000
+FAIL INDEX-023              index --max_chunk_size  (rc=1) traceback leaked
+     |     retriever.index(corpus_tokens)
+     |     ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/.venv/lib/python3.13/site-packages/bm25s/__init__.py", line 564, in index
+     |     vocab_dict[""] = max(vocab_dict.values()) + 1
+     |                      ~~~^^^^^^^^^^^^^^^^^^^^^
+     | ValueError: max() iterable argument is empty
+PASS SEARCH-001             search  (rc=2) 
+PASS SEARCH-002             search hello --bogus=1  (rc=2) 
+FAIL SEARCH-003             search hello --k=abc  (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 70, in search
+     |     self._validate_input(query, top_k)
+     |     ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 56, in _validate_input
+     |     raise RetrieverError("top_k must be an integer.")
+     | src.error_classes.RetrieverError: top_k must be an integer.
+FAIL SEARCH-015             search   (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 70, in search
+     |     self._validate_input(query, top_k)
+     |     ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 53, in _validate_input
+     |     raise RetrieverError("Query must not be empty.")
+     | src.error_classes.RetrieverError: Query must not be empty.
+FAIL SEARCH-016             search      (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 70, in search
+     |     self._validate_input(query, top_k)
+     |     ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 53, in _validate_input
+     |     raise RetrieverError("Query must not be empty.")
+     | src.error_classes.RetrieverError: Query must not be empty.
+FAIL SEARCH-018             search 123  (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 70, in search
+     |     self._validate_input(query, top_k)
+     |     ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 50, in _validate_input
+     |     raise RetrieverError("Query must be a string.")
+     | src.error_classes.RetrieverError: Query must be a string.
+FAIL SEARCH-019             search hello --k=0  (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 70, in search
+     |     self._validate_input(query, top_k)
+     |     ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 59, in _validate_input
+     |     raise RetrieverError("top_k must be a positive integer.")
+     | src.error_classes.RetrieverError: top_k must be a positive integer.
+FAIL SEARCH-019             search hello --k=-1  (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 70, in search
+     |     self._validate_input(query, top_k)
+     |     ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 59, in _validate_input
+     |     raise RetrieverError("top_k must be a positive integer.")
+     | src.error_classes.RetrieverError: top_k must be a positive integer.
+FAIL SEARCH-020             search hello --k=1.5  (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 70, in search
+     |     self._validate_input(query, top_k)
+     |     ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 56, in _validate_input
+     |     raise RetrieverError("top_k must be an integer.")
+     | src.error_classes.RetrieverError: top_k must be an integer.
+FAIL SEARCH-020             search hello --k=True  (rc=0) expected non-zero exit, got 0
+     | data/raw/vllm-0.10.1/tests/tool_use/test_chat_completion_request_validations.py [0:1169]
+     | 
+     | Split strings:   0%|          | 0/1 [00:00<?, ?it/s]
+     |                                                     
+     | 
+     | BM25S Retrieve:   0%|          | 0/1 [00:00<?, ?it/s]
+FAIL SEARCH-008             search hello  (rc=1) traceback leaked
+     |     retriver = Retriever()
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 35, in __init__
+     |     raise RetrieverError(
+     |     ...<2 lines>...
+     |     )
+     | src.error_classes.RetrieverError: Index files are missing. Run: uv run python -m src index --max_chunk_size 2000
+FAIL SEARCH-009             search hello  (rc=1) traceback leaked
+     |     component = fn(*varargs, **kwargs)
+     |   File "/goinfre/mbougajd/RAG/src/cli.py", line 17, in search
+     |     retriver = Retriever()
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 42, in __init__
+     |     raise RetrieverError("Cannot read chunks JSON.")
+     | src.error_classes.RetrieverError: Cannot read chunks JSON.
+FAIL SEARCH-010             search hello  (rc=1) traceback leaked
+     |     component = fn(*varargs, **kwargs)
+     |   File "/goinfre/mbougajd/RAG/src/cli.py", line 17, in search
+     |     retriver = Retriever()
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 42, in __init__
+     |     raise RetrieverError("Cannot read chunks JSON.")
+     | src.error_classes.RetrieverError: Cannot read chunks JSON.
+PASS SEARCH-017             search zzzxqwv qqqq  (rc=0) 
+PASS SEARCH-021             search hello --k=99999999  (rc=0) 
+PASS SEARCH-005             search hello  (rc=130) 
+PASS SEARCH_DATASET-001     search_dataset  (rc=2) 
+PASS SEARCH_DATASET-002     search_dataset --bogus=1  (rc=2) 
+FAIL SEARCH_DATASET-003     search_dataset --dataset_path=/tmp/ragtest_820f2q48/good.json --save_directory=/tmp/ragtest_820f2q48/out --k=abc  (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/cli.py", line 26, in search_dataset
+     |     dsr.search_dataset(dataset_path, save_directory, k)
+     |     ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 132, in search_dataset
+     |     raise RetrieverError("top_k must be a positive integer.")
+     | src.error_classes.RetrieverError: top_k must be a positive integer.
+SKIP SEARCH_DATASET-005     search_dataset --dataset_path=/tmp/ragtest_820f2q48/good.json --save_directory=/tmp/ragtest_820f2q48/out --k=5  (rc=0) finished before SIGINT
+FAIL SEARCH_DATASET-038     search_dataset --dataset_path=/tmp/ragtest_820f2q48/good.json --save_directory=/tmp/ragtest_820f2q48/out --k=0  (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/cli.py", line 26, in search_dataset
+     |     dsr.search_dataset(dataset_path, save_directory, k)
+     |     ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 132, in search_dataset
+     |     raise RetrieverError("top_k must be a positive integer.")
+     | src.error_classes.RetrieverError: top_k must be a positive integer.
+FAIL SEARCH_DATASET-038     search_dataset --dataset_path=/tmp/ragtest_820f2q48/good.json --save_directory=/tmp/ragtest_820f2q48/out --k=-1  (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/cli.py", line 26, in search_dataset
+     |     dsr.search_dataset(dataset_path, save_directory, k)
+     |     ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 132, in search_dataset
+     |     raise RetrieverError("top_k must be a positive integer.")
+     | src.error_classes.RetrieverError: top_k must be a positive integer.
+FAIL SEARCH_DATASET-038     search_dataset --dataset_path=/tmp/ragtest_820f2q48/good.json --save_directory=/tmp/ragtest_820f2q48/out --k=1.5  (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/cli.py", line 26, in search_dataset
+     |     dsr.search_dataset(dataset_path, save_directory, k)
+     |     ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 132, in search_dataset
+     |     raise RetrieverError("top_k must be a positive integer.")
+     | src.error_classes.RetrieverError: top_k must be a positive integer.
+PASS SEARCH_DATASET-039     search_dataset --dataset_path=/tmp/ragtest_820f2q48/good.json --save_directory=/tmp/ragtest_820f2q48/out --k=99999999  (rc=0) 
+FAIL SEARCH_DATASET-026     search_dataset --dataset_path=/tmp/ragtest_820f2q48/good.json --save_directory=/tmp/ragtest_820f2q48/out --k=5  (rc=1) traceback leaked
+     |                      ~~~~~~~~~^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 35, in __init__
+     |     raise RetrieverError(
+     |     ...<2 lines>...
+     |     )
+     | src.error_classes.RetrieverError: Index files are missing. Run: uv run python -m src index --max_chunk_size 2000
+FAIL SEARCH_DATASET-027     search_dataset --dataset_path=/tmp/ragtest_820f2q48/good.json --save_directory=/tmp/ragtest_820f2q48/out --k=5  (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 125, in __init__
+     |     self.retriever = Retriever()
+     |                      ~~~~~~~~~^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 42, in __init__
+     |     raise RetrieverError("Cannot read chunks JSON.")
+     | src.error_classes.RetrieverError: Cannot read chunks JSON.
+FAIL SEARCH_DATASET-028     search_dataset --dataset_path=/tmp/ragtest_820f2q48/good.json --save_directory=/tmp/ragtest_820f2q48/out --k=5  (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 125, in __init__
+     |     self.retriever = Retriever()
+     |                      ~~~~~~~~~^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 42, in __init__
+     |     raise RetrieverError("Cannot read chunks JSON.")
+     | src.error_classes.RetrieverError: Cannot read chunks JSON.
+FAIL SEARCH_DATASET-008     search_dataset --dataset_path=/tmp/ragtest_820f2q48/nope.json --save_directory=/tmp/ragtest_820f2q48/out --k=5  (rc=1) traceback leaked
+     |     dsr.search_dataset(dataset_path, save_directory, k)
+     |     ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 154, in search_dataset
+     |     raise DatasetRetrieverError(
+     |         f"Cannot read dataset '{dataset_path}': {error}")
+     | src.error_classes.DatasetRetrieverError: Cannot read dataset '/tmp/ragtest_820f2q48/nope.json': [Errno 2] No such file or directory: '/tmp/ragtest_820f2q48/nope.json'
+FAIL SEARCH_DATASET-009     search_dataset --dataset_path=/tmp/ragtest_820f2q48/adir --save_directory=/tmp/ragtest_820f2q48/out --k=5  (rc=1) traceback leaked
+     |     dsr.search_dataset(dataset_path, save_directory, k)
+     |     ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 154, in search_dataset
+     |     raise DatasetRetrieverError(
+     |         f"Cannot read dataset '{dataset_path}': {error}")
+     | src.error_classes.DatasetRetrieverError: Cannot read dataset '/tmp/ragtest_820f2q48/adir': [Errno 21] Is a directory: '/tmp/ragtest_820f2q48/adir'
+FAIL SEARCH_DATASET-011     search_dataset --dataset_path=/tmp/ragtest_820f2q48/unreadable.json --save_directory=/tmp/ragtest_820f2q48/out --k=5  (rc=1) traceback leaked
+     |     dsr.search_dataset(dataset_path, save_directory, k)
+     |     ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 154, in search_dataset
+     |     raise DatasetRetrieverError(
+     |         f"Cannot read dataset '{dataset_path}': {error}")
+     | src.error_classes.DatasetRetrieverError: Cannot read dataset '/tmp/ragtest_820f2q48/unreadable.json': [Errno 13] Permission denied: '/tmp/ragtest_820f2q48/unreadable.json'
+FAIL SEARCH_DATASET-012     search_dataset --dataset_path=/tmp/ragtest_820f2q48/bad.json --save_directory=/tmp/ragtest_820f2q48/out --k=5  (rc=1) traceback leaked
+     |     dsr.search_dataset(dataset_path, save_directory, k)
+     |     ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 158, in search_dataset
+     |     raise DatasetRetrieverError(
+     |         f"Invalid dataset JSON '{dataset_path}': {error}")
+     | src.error_classes.DatasetRetrieverError: Invalid dataset JSON '/tmp/ragtest_820f2q48/bad.json': Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+FAIL SEARCH_DATASET-013     search_dataset --dataset_path=/tmp/ragtest_820f2q48/utf8.json --save_directory=/tmp/ragtest_820f2q48/out --k=5  (rc=1) traceback leaked
+     |     dsr.search_dataset(dataset_path, save_directory, k)
+     |     ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 158, in search_dataset
+     |     raise DatasetRetrieverError(
+     |         f"Invalid dataset JSON '{dataset_path}': {error}")
+     | src.error_classes.DatasetRetrieverError: Invalid dataset JSON '/tmp/ragtest_820f2q48/utf8.json': 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+FAIL SEARCH_DATASET-014     search_dataset --dataset_path=/tmp/ragtest_820f2q48/schema.json --save_directory=/tmp/ragtest_820f2q48/out --k=5  (rc=1) traceback leaked
+     |         f"Invalid dataset JSON '{dataset_path}': {error}"
+     |     )
+     | src.error_classes.DatasetRetrieverError: Invalid dataset JSON '/tmp/ragtest_820f2q48/schema.json': 1 validation error for RagDataset
+     | rag_questions
+     |   Field required [type=missing, input_value={'foo': 1}, input_type=dict]
+     |     For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAIL SEARCH_DATASET-015     search_dataset --dataset_path=/tmp/ragtest_820f2q48/empty.json --save_directory=/tmp/ragtest_820f2q48/out --k=5  (rc=1) traceback leaked
+     |     dsr.search_dataset(dataset_path, save_directory, k)
+     |     ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 158, in search_dataset
+     |     raise DatasetRetrieverError(
+     |         f"Invalid dataset JSON '{dataset_path}': {error}")
+     | src.error_classes.DatasetRetrieverError: Invalid dataset JSON '/tmp/ragtest_820f2q48/empty.json': Expecting value: line 1 column 1 (char 0)
+PASS SEARCH_DATASET-015     search_dataset --dataset_path=/tmp/ragtest_820f2q48/noq.json --save_directory=/tmp/ragtest_820f2q48/out --k=5  (rc=0) 
+PASS SEARCH_DATASET-033     search_dataset --dataset_path=/tmp/ragtest_820f2q48/dup.json --save_directory=/tmp/ragtest_820f2q48/out --k=5  (rc=0) 
+FAIL SEARCH_DATASET-034     search_dataset --dataset_path=/tmp/ragtest_820f2q48/nofield.json --save_directory=/tmp/ragtest_820f2q48/out --k=5  (rc=1) traceback leaked
+     | rag_questions.0.AnsweredQuestion.answer
+     |   Field required [type=missing, input_value={'question_id': 'a'}, input_type=dict]
+     |     For further information visit https://errors.pydantic.dev/2.13/v/missing
+     | rag_questions.0.UnansweredQuestion.question
+     |   Field required [type=missing, input_value={'question_id': 'a'}, input_type=dict]
+     |     For further information visit https://errors.pydantic.dev/2.13/v/missing
+PASS SEARCH_DATASET-035     search_dataset --dataset_path=/tmp/ragtest_820f2q48/blank.json --save_directory=/tmp/ragtest_820f2q48/out --k=5  (rc=0) 
+FAIL SEARCH_DATASET-040     search_dataset --dataset_path=/tmp/ragtest_820f2q48/root.json --save_directory=/tmp/ragtest_820f2q48/out --k=5  (rc=1) traceback leaked
+     |         f"Invalid dataset JSON '{dataset_path}': {error}"
+     |     )
+     | src.error_classes.DatasetRetrieverError: Invalid dataset JSON '/tmp/ragtest_820f2q48/root.json': 1 validation error for RagDataset
+     | rag_questions
+     |   Field required [type=missing, input_value={'questions': [{'question...ion': 'What is vLLM?'}]}, input_type=dict]
+     |     For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAIL SEARCH_DATASET-010     search_dataset --dataset_path=/tmp/ragtest_820f2q48/good.json --save_directory=/tmp/ragtest_820f2q48/afile.txt --k=5  (rc=1) traceback leaked
+     |     ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 184, in search_dataset
+     |     raise DatasetRetrieverError(
+     |         f"Cannot save results to {output_path}: {error}"
+     |     )
+     | src.error_classes.DatasetRetrieverError: Cannot save results to /tmp/ragtest_820f2q48/afile.txt/good.json: [Errno 17] File exists: '/tmp/ragtest_820f2q48/afile.txt'
+FAIL SEARCH_DATASET-019     search_dataset --dataset_path=/tmp/ragtest_820f2q48/good.json --save_directory=/tmp/ragtest_820f2q48/afile.txt/out --k=5  (rc=1) traceback leaked
+     |     ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 184, in search_dataset
+     |     raise DatasetRetrieverError(
+     |         f"Cannot save results to {output_path}: {error}"
+     |     )
+     | src.error_classes.DatasetRetrieverError: Cannot save results to /tmp/ragtest_820f2q48/afile.txt/out/good.json: [Errno 20] Not a directory: '/tmp/ragtest_820f2q48/afile.txt/out'
+FAIL SEARCH_DATASET-018     search_dataset --dataset_path=/tmp/ragtest_820f2q48/good.json --save_directory=/tmp/ragtest_820f2q48/ro/out --k=5  (rc=1) traceback leaked
+     |     ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 184, in search_dataset
+     |     raise DatasetRetrieverError(
+     |         f"Cannot save results to {output_path}: {error}"
+     |     )
+     | src.error_classes.DatasetRetrieverError: Cannot save results to /tmp/ragtest_820f2q48/ro/out/good.json: [Errno 13] Permission denied: '/tmp/ragtest_820f2q48/ro/out'
+FAIL SEARCH_DATASET-020     search_dataset --dataset_path=/tmp/ragtest_820f2q48/good.json --save_directory=/tmp/ragtest_820f2q48/ro --k=5  (rc=1) traceback leaked
+     |     ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 184, in search_dataset
+     |     raise DatasetRetrieverError(
+     |         f"Cannot save results to {output_path}: {error}"
+     |     )
+     | src.error_classes.DatasetRetrieverError: Cannot save results to /tmp/ragtest_820f2q48/ro/good.json: [Errno 13] Permission denied: '/tmp/ragtest_820f2q48/ro/good.json'
+PASS ANSWER-001             answer  (rc=2) 
+PASS ANSWER-002             answer hello --bogus=1  (rc=2) 
+FAIL ANSWER-003             answer hello --k=abc  (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 70, in search
+     |     self._validate_input(query, top_k)
+     |     ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 56, in _validate_input
+     |     raise RetrieverError("top_k must be an integer.")
+     | src.error_classes.RetrieverError: top_k must be an integer.
+FAIL ANSWER-023             answer   (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 70, in search
+     |     self._validate_input(query, top_k)
+     |     ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 53, in _validate_input
+     |     raise RetrieverError("Query must not be empty.")
+     | src.error_classes.RetrieverError: Query must not be empty.
+FAIL ANSWER-023             answer      (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 70, in search
+     |     self._validate_input(query, top_k)
+     |     ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 53, in _validate_input
+     |     raise RetrieverError("Query must not be empty.")
+     | src.error_classes.RetrieverError: Query must not be empty.
+FAIL ANSWER-023             answer 123  (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 70, in search
+     |     self._validate_input(query, top_k)
+     |     ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 50, in _validate_input
+     |     raise RetrieverError("Query must be a string.")
+     | src.error_classes.RetrieverError: Query must be a string.
+FAIL ANSWER-024             answer hello --k=0  (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 70, in search
+     |     self._validate_input(query, top_k)
+     |     ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 59, in _validate_input
+     |     raise RetrieverError("top_k must be a positive integer.")
+     | src.error_classes.RetrieverError: top_k must be a positive integer.
+FAIL ANSWER-024             answer hello --k=-1  (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 70, in search
+     |     self._validate_input(query, top_k)
+     |     ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 59, in _validate_input
+     |     raise RetrieverError("top_k must be a positive integer.")
+     | src.error_classes.RetrieverError: top_k must be a positive integer.
+FAIL ANSWER-024             answer hello --k=1.5  (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 70, in search
+     |     self._validate_input(query, top_k)
+     |     ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 56, in _validate_input
+     |     raise RetrieverError("top_k must be an integer.")
+     | src.error_classes.RetrieverError: top_k must be an integer.
+FAIL ANSWER-024             answer hello --k=True  (rc=0) expected non-zero exit, got 0
+     | Loading weights: 100%|██████████| 311/311 [00:00<00:00, 24024.84it/s]
+     | 
+     | Split strings:   0%|          | 0/1 [00:00<?, ?it/s]
+     |                                                     
+     | 
+     | BM25S Retrieve:   0%|          | 0/1 [00:00<?, ?it/s]
+FAIL ANSWER-008             answer hello  (rc=1) traceback leaked
+     |                      ~~~~~~~~~^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 35, in __init__
+     |     raise RetrieverError(
+     |     ...<2 lines>...
+     |     )
+     | src.error_classes.RetrieverError: Index files are missing. Run: uv run python -m src index --max_chunk_size 2000
+FAIL ANSWER-009             answer hello  (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/generator.py", line 53, in __init__
+     |     self.retriever = Retriever()
+     |                      ~~~~~~~~~^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 42, in __init__
+     |     raise RetrieverError("Cannot read chunks JSON.")
+     | src.error_classes.RetrieverError: Cannot read chunks JSON.
+FAIL ANSWER-010             answer hello  (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/generator.py", line 53, in __init__
+     |     self.retriever = Retriever()
+     |                      ~~~~~~~~~^^
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 42, in __init__
+     |     raise RetrieverError("Cannot read chunks JSON.")
+     | src.error_classes.RetrieverError: Cannot read chunks JSON.
+PASS ANSWER-005             answer hello  (rc=130) 
+FAIL ANSWER-015             answer hello  (rc=0) expected non-zero exit, got 0
+     | Loading weights: 100%|██████████| 311/311 [00:00<00:00, 13317.97it/s]
+     | 
+     | Split strings:   0%|          | 0/1 [00:00<?, ?it/s]
+     |                                                     
+     | 
+     | BM25S Retrieve:   0%|          | 0/1 [00:00<?, ?it/s]
+PASS ANSWER_DATASET-001     answer_dataset  (rc=2) 
+PASS ANSWER_DATASET-002     answer_dataset --bogus=1  (rc=2) 
+FAIL ANSWER_DATASET-003     answer_dataset --student_search_results_path=1 --save_directory=2 --k=abc  (rc=1) traceback leaked
+     |     ~~~~~~~~~~~~~~~~^^^^^^^
+     |   File "/opt/pyenv/versions/3.13.1/lib/python3.13/pathlib/_local.py", line 132, in __init__
+     |     raise TypeError(
+     |     ...<2 lines>...
+     |         f"not {type(path).__name__!r}")
+     | TypeError: argument should be a str or an os.PathLike object where __fspath__ returns a str, not 'int'
+PASS ANSWER_DATASET-005     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/ok_res.json --save_directory=/tmp/ragtest_820f2q48/out  (rc=130) 
+FAIL ANSWER_DATASET-031     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/ok_res.json --save_directory=/tmp/ragtest_820f2q48/out  (rc=1) traceback leaked
+     |     ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/generator.py", line 206, in answer_dataset
+     |     raise DatasetGeneratorError(
+     |         f"Critical error while processing or saving dataset for "
+     |         f"'{input_path}': {e}")
+     | src.error_classes.DatasetGeneratorError: Critical error while processing or saving dataset for '/tmp/ragtest_820f2q48/ok_res.json': Object of type StudentSearchResultsAndAnswer is not JSON serializable
+FAIL ANSWER_DATASET-008     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/nope.json --save_directory=/tmp/ragtest_820f2q48/out  (rc=1) traceback leaked
+     |   File "/goinfre/mbougajd/RAG/src/generator.py", line 199, in answer_dataset
+     |     data = self._load_search_results(input_path)
+     |   File "/goinfre/mbougajd/RAG/src/generator.py", line 109, in _load_search_results
+     |     raise DatasetGeneratorError(
+     |         f"The search results file does not exist: {input_path}")
+     | src.error_classes.DatasetGeneratorError: The search results file does not exist: /tmp/ragtest_820f2q48/nope.json
+FAIL ANSWER_DATASET-009     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/adir --save_directory=/tmp/ragtest_820f2q48/out  (rc=1) traceback leaked
+     |     with input_path.open("r", encoding="utf-8") as file:
+     |          ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/opt/pyenv/versions/3.13.1/lib/python3.13/pathlib/_local.py", line 537, in open
+     |     return io.open(self, mode, buffering, encoding, errors, newline)
+     |            ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     | IsADirectoryError: [Errno 21] Is a directory: '/tmp/ragtest_820f2q48/adir'
+FAIL ANSWER_DATASET-011     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/unreadable.json --save_directory=/tmp/ragtest_820f2q48/out  (rc=1) traceback leaked
+     |     data = self._load_search_results(input_path)
+     |   File "/goinfre/mbougajd/RAG/src/generator.py", line 124, in _load_search_results
+     |     raise DatasetGeneratorError(
+     |     ...<2 lines>...
+     |     )
+     | src.error_classes.DatasetGeneratorError: Permission denied: You do not have read access to '/tmp/ragtest_820f2q48/unreadable.json'. Check file permissions.
+FAIL ANSWER_DATASET-012     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/bad.json --save_directory=/tmp/ragtest_820f2q48/out  (rc=1) traceback leaked
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |     )
+     |     ^
+     | pydantic_core._pydantic_core.ValidationError: 1 validation error for StudentSearchResults
+     |   Invalid JSON: key must be a string at line 1 column 2 [type=json_invalid, input_value='{not json', input_type=str]
+     |     For further information visit https://errors.pydantic.dev/2.13/v/json_invalid
+FAIL ANSWER_DATASET-013     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/utf8.json --save_directory=/tmp/ragtest_820f2q48/out  (rc=1) traceback leaked
+     |     data = self._load_search_results(input_path)
+     |   File "/goinfre/mbougajd/RAG/src/generator.py", line 114, in _load_search_results
+     |     content = file.read().strip()
+     |               ~~~~~~~~~^^
+     |   File "<frozen codecs>", line 325, in decode
+     | UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+FAIL ANSWER_DATASET-014     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/schema.json --save_directory=/tmp/ragtest_820f2q48/out  (rc=1) traceback leaked
+     |     from src.cli import RagCLI
+     |   File "/goinfre/mbougajd/RAG/src/cli.py", line 2, in <module>
+     |     from src.retriever import Retriever, DatasetRetriever
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 98
+     |     file_path=location[0],
+     | IndentationError: unexpected indent
+FAIL ANSWER_DATASET-039     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/good.json --save_directory=/tmp/ragtest_820f2q48/out  (rc=1) traceback leaked
+     |     from src.cli import RagCLI
+     |   File "/goinfre/mbougajd/RAG/src/cli.py", line 2, in <module>
+     |     from src.retriever import Retriever, DatasetRetriever
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 98
+     |     file_path=location[0],
+     | IndentationError: unexpected indent
+FAIL ANSWER_DATASET-015     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/empty.json --save_directory=/tmp/ragtest_820f2q48/out  (rc=1) traceback leaked
+     |     from src.cli import RagCLI
+     |   File "/goinfre/mbougajd/RAG/src/cli.py", line 2, in <module>
+     |     from src.retriever import Retriever, DatasetRetriever
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 98
+     |     file_path=location[0],
+     | IndentationError: unexpected indent
+FAIL ANSWER_DATASET-015     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/res_empty.json --save_directory=/tmp/ragtest_820f2q48/out  (rc=1) traceback leaked
+     |     from src.cli import RagCLI
+     |   File "/goinfre/mbougajd/RAG/src/cli.py", line 2, in <module>
+     |     from src.retriever import Retriever, DatasetRetriever
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 98
+     |     file_path=location[0],
+     | IndentationError: unexpected indent
+FAIL ANSWER_DATASET-026     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/res_dup.json --save_directory=/tmp/ragtest_820f2q48/out  (rc=1) traceback leaked
+     |     from src.cli import RagCLI
+     |   File "/goinfre/mbougajd/RAG/src/cli.py", line 2, in <module>
+     |     from src.retriever import Retriever, DatasetRetriever
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 98
+     |     file_path=location[0],
+     | IndentationError: unexpected indent
+FAIL ANSWER_DATASET-027     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/res_nofield.json --save_directory=/tmp/ragtest_820f2q48/out  (rc=1) traceback leaked
+     |     from src.cli import RagCLI
+     |   File "/goinfre/mbougajd/RAG/src/cli.py", line 2, in <module>
+     |     from src.retriever import Retriever, DatasetRetriever
+     |   File "/goinfre/mbougajd/RAG/src/retriever.py", line 98
+     |     file_path=location[0],
+     | IndentationError: unexpected indent
+FAIL ANSWER_DATASET-028     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/res_blank.json --save_directory=/tmp/ragtest_820f2q48/out  (rc=1) traceback leaked
+     |     ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/generator.py", line 206, in answer_dataset
+     |     raise DatasetGeneratorError(
+     |         f"Critical error while processing or saving dataset for "
+     |         f"'{input_path}': {e}")
+     | src.error_classes.DatasetGeneratorError: Critical error while processing or saving dataset for '/tmp/ragtest_820f2q48/res_blank.json': Object of type StudentSearchResultsAndAnswer is not JSON serializable
+FAIL ANSWER_DATASET-040     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/nosrc.json --save_directory=/tmp/ragtest_820f2q48/out  (rc=1) traceback leaked
+     |     )
+     |     ^
+     | pydantic_core._pydantic_core.ValidationError: 1 validation error for StudentSearchResults
+     | search_results.0.retrieved_sources
+     |   Field required [type=missing, input_value={'question_id': 'q1', 'question': 'What is vLLM?'}, input_type=dict]
+     |     For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAIL ANSWER_DATASET-041     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/srcmissing.json --save_directory=/tmp/ragtest_820f2q48/out  (rc=1) traceback leaked
+     |     ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/generator.py", line 206, in answer_dataset
+     |     raise DatasetGeneratorError(
+     |         f"Critical error while processing or saving dataset for "
+     |         f"'{input_path}': {e}")
+     | src.error_classes.DatasetGeneratorError: Critical error while processing or saving dataset for '/tmp/ragtest_820f2q48/srcmissing.json': Critical error while processing dataset: 'MinimalSearchResults' object has no attribute 'get'
+FAIL ANSWER_DATASET-042     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/outside.json --save_directory=/tmp/ragtest_820f2q48/out  (rc=1) traceback leaked
+     |     ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/generator.py", line 206, in answer_dataset
+     |     raise DatasetGeneratorError(
+     |         f"Critical error while processing or saving dataset for "
+     |         f"'{input_path}': {e}")
+     | src.error_classes.DatasetGeneratorError: Critical error while processing or saving dataset for '/tmp/ragtest_820f2q48/outside.json': Object of type StudentSearchResultsAndAnswer is not JSON serializable
+FAIL ANSWER_DATASET-043     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/oob.json --save_directory=/tmp/ragtest_820f2q48/out  (rc=1) traceback leaked
+     |     ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/generator.py", line 206, in answer_dataset
+     |     raise DatasetGeneratorError(
+     |         f"Critical error while processing or saving dataset for "
+     |         f"'{input_path}': {e}")
+     | src.error_classes.DatasetGeneratorError: Critical error while processing or saving dataset for '/tmp/ragtest_820f2q48/oob.json': Object of type StudentSearchResultsAndAnswer is not JSON serializable
+FAIL ANSWER_DATASET-010     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/ok_res.json --save_directory=/tmp/ragtest_820f2q48/afile.txt  (rc=1) traceback leaked
+     |     ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/generator.py", line 206, in answer_dataset
+     |     raise DatasetGeneratorError(
+     |         f"Critical error while processing or saving dataset for "
+     |         f"'{input_path}': {e}")
+     | src.error_classes.DatasetGeneratorError: Critical error while processing or saving dataset for '/tmp/ragtest_820f2q48/ok_res.json': Failed to save dataset to '/tmp/ragtest_820f2q48/afile.txt/ok_res.json': [Errno 17] File exists: '/tmp/ragtest_820f2q48/afile.txt'
+FAIL ANSWER_DATASET-019     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/ok_res.json --save_directory=/tmp/ragtest_820f2q48/afile.txt/out  (rc=1) traceback leaked
+     |     ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/generator.py", line 206, in answer_dataset
+     |     raise DatasetGeneratorError(
+     |         f"Critical error while processing or saving dataset for "
+     |         f"'{input_path}': {e}")
+     | src.error_classes.DatasetGeneratorError: Critical error while processing or saving dataset for '/tmp/ragtest_820f2q48/ok_res.json': Failed to save dataset to '/tmp/ragtest_820f2q48/afile.txt/out/ok_res.json': [Errno 20] Not a directory: '/tmp/ragtest_820f2q48/afile.txt/out'
+FAIL ANSWER_DATASET-018     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/ok_res.json --save_directory=/tmp/ragtest_820f2q48/ro/out  (rc=1) traceback leaked
+     |     ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/generator.py", line 206, in answer_dataset
+     |     raise DatasetGeneratorError(
+     |         f"Critical error while processing or saving dataset for "
+     |         f"'{input_path}': {e}")
+     | src.error_classes.DatasetGeneratorError: Critical error while processing or saving dataset for '/tmp/ragtest_820f2q48/ok_res.json': Failed to save dataset to '/tmp/ragtest_820f2q48/ro/out/ok_res.json': [Errno 13] Permission denied: '/tmp/ragtest_820f2q48/ro/out'
+FAIL ANSWER_DATASET-020     answer_dataset --student_search_results_path=/tmp/ragtest_820f2q48/ok_res.json --save_directory=/tmp/ragtest_820f2q48/ro  (rc=1) traceback leaked
+     |     ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/goinfre/mbougajd/RAG/src/generator.py", line 206, in answer_dataset
+     |     raise DatasetGeneratorError(
+     |         f"Critical error while processing or saving dataset for "
+     |         f"'{input_path}': {e}")
+     | src.error_classes.DatasetGeneratorError: Critical error while processing or saving dataset for '/tmp/ragtest_820f2q48/ok_res.json': Failed to save dataset to '/tmp/ragtest_820f2q48/ro/ok_res.json': [Errno 13] Permission denied: '/tmp/ragtest_820f2q48/ro/ok_res.json'
+PASS EVALUATE-001           evaluate  (rc=2) 
+PASS EVALUATE-002           evaluate --bogus=1  (rc=2) 
+PASS EVALUATE-005           evaluate --student_search_results_path=/tmp/ragtest_820f2q48/ok_res.json --dataset_path=/tmp/ragtest_820f2q48/gt.json  (rc=130) 
+FAIL EVALUATE-018           evaluate --student_search_results_path=/tmp/ragtest_820f2q48/gt.json --dataset_path=/tmp/ragtest_820f2q48/ok_res.json  (rc=1) traceback leaked
+     | search_results
+     |   Field required [type=missing, input_value={'rag_questions': [{'ques...: 10}], 'answer': 'x'}]}, input_type=dict]
+     |     For further information visit https://errors.pydantic.dev/2.13/v/missing
+     | k
+     |   Field required [type=missing, input_value={'rag_questions': [{'ques...: 10}], 'answer': 'x'}]}, input_type=dict]
+     |     For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAIL EVALUATE-008           evaluate --student_search_results_path=/tmp/ragtest_820f2q48/nope.json --dataset_path=/tmp/ragtest_820f2q48/gt.json  (rc=1) traceback leaked
+     |     with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+     |          ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/opt/pyenv/versions/3.13.1/lib/python3.13/pathlib/_local.py", line 537, in open
+     |     return io.open(self, mode, buffering, encoding, errors, newline)
+     |            ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     | FileNotFoundError: [Errno 2] No such file or directory: '/tmp/ragtest_820f2q48/nope.json'
+FAIL EVALUATE-009           evaluate --student_search_results_path=/tmp/ragtest_820f2q48/adir --dataset_path=/tmp/ragtest_820f2q48/gt.json  (rc=1) traceback leaked
+     |     with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+     |          ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/opt/pyenv/versions/3.13.1/lib/python3.13/pathlib/_local.py", line 537, in open
+     |     return io.open(self, mode, buffering, encoding, errors, newline)
+     |            ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     | IsADirectoryError: [Errno 21] Is a directory: '/tmp/ragtest_820f2q48/adir'
+FAIL EVALUATE-011           evaluate --student_search_results_path=/tmp/ragtest_820f2q48/unreadable.json --dataset_path=/tmp/ragtest_820f2q48/gt.json  (rc=1) traceback leaked
+     |     with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+     |          ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/opt/pyenv/versions/3.13.1/lib/python3.13/pathlib/_local.py", line 537, in open
+     |     return io.open(self, mode, buffering, encoding, errors, newline)
+     |            ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     | PermissionError: [Errno 13] Permission denied: '/tmp/ragtest_820f2q48/unreadable.json'
+FAIL EVALUATE-012           evaluate --student_search_results_path=/tmp/ragtest_820f2q48/bad.json --dataset_path=/tmp/ragtest_820f2q48/gt.json  (rc=1) traceback leaked
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |     )
+     |     ^
+     | pydantic_core._pydantic_core.ValidationError: 1 validation error for StudentSearchResults
+     |   Invalid JSON: key must be a string at line 1 column 2 [type=json_invalid, input_value='{not json', input_type=str]
+     |     For further information visit https://errors.pydantic.dev/2.13/v/json_invalid
+FAIL EVALUATE-013           evaluate --student_search_results_path=/tmp/ragtest_820f2q48/utf8.json --dataset_path=/tmp/ragtest_820f2q48/gt.json  (rc=1) traceback leaked
+     |            ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/opt/pyenv/versions/3.13.1/lib/python3.13/pathlib/_abc.py", line 633, in read_text
+     |     return f.read()
+     |            ~~~~~~^^
+     |   File "<frozen codecs>", line 325, in decode
+     | UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+FAIL EVALUATE-014           evaluate --student_search_results_path=/tmp/ragtest_820f2q48/schema.json --dataset_path=/tmp/ragtest_820f2q48/gt.json  (rc=1) traceback leaked
+     | search_results
+     |   Field required [type=missing, input_value={'foo': 1}, input_type=dict]
+     |     For further information visit https://errors.pydantic.dev/2.13/v/missing
+     | k
+     |   Field required [type=missing, input_value={'foo': 1}, input_type=dict]
+     |     For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAIL EVALUATE-015           evaluate --student_search_results_path=/tmp/ragtest_820f2q48/empty.json --dataset_path=/tmp/ragtest_820f2q48/gt.json  (rc=1) traceback leaked
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |     )
+     |     ^
+     | pydantic_core._pydantic_core.ValidationError: 1 validation error for StudentSearchResults
+     |   Invalid JSON: EOF while parsing a value at line 1 column 0 [type=json_invalid, input_value='', input_type=str]
+     |     For further information visit https://errors.pydantic.dev/2.13/v/json_invalid
+PASS EVALUATE-019           evaluate --student_search_results_path=/tmp/ragtest_820f2q48/mismatch.json --dataset_path=/tmp/ragtest_820f2q48/gt.json  (rc=0) 
+FAIL EVALUATE-022           evaluate --student_search_results_path=/tmp/ragtest_820f2q48/span_big.json --dataset_path=/tmp/ragtest_820f2q48/gt.json  (rc=0) expected non-zero exit, got 0
+     | Recall@1: 0.000 (0.0%)
+     | Recall@3: 0.000 (0.0%)
+     | Recall@5: 0.000 (0.0%)
+     | Recall@10: 0.000 (0.0%)
+FAIL EVALUATE-024           evaluate --student_search_results_path=/tmp/ragtest_820f2q48/span_neg.json --dataset_path=/tmp/ragtest_820f2q48/gt.json  (rc=0) expected non-zero exit, got 0
+     | Recall@1: 1.000 (100.0%)
+     | Recall@3: 1.000 (100.0%)
+     | Recall@5: 1.000 (100.0%)
+     | Recall@10: 1.000 (100.0%)
+FAIL EVALUATE-008           evaluate --student_search_results_path=/tmp/ragtest_820f2q48/ok_res.json --dataset_path=/tmp/ragtest_820f2q48/nope.json  (rc=1) traceback leaked
+     |     with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+     |          ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/opt/pyenv/versions/3.13.1/lib/python3.13/pathlib/_local.py", line 537, in open
+     |     return io.open(self, mode, buffering, encoding, errors, newline)
+     |            ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     | FileNotFoundError: [Errno 2] No such file or directory: '/tmp/ragtest_820f2q48/nope.json'
+FAIL EVALUATE-009           evaluate --student_search_results_path=/tmp/ragtest_820f2q48/ok_res.json --dataset_path=/tmp/ragtest_820f2q48/adir  (rc=1) traceback leaked
+     |     with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+     |          ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/opt/pyenv/versions/3.13.1/lib/python3.13/pathlib/_local.py", line 537, in open
+     |     return io.open(self, mode, buffering, encoding, errors, newline)
+     |            ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     | IsADirectoryError: [Errno 21] Is a directory: '/tmp/ragtest_820f2q48/adir'
+FAIL EVALUATE-011           evaluate --student_search_results_path=/tmp/ragtest_820f2q48/ok_res.json --dataset_path=/tmp/ragtest_820f2q48/unreadable.json  (rc=1) traceback leaked
+     |     with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+     |          ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/opt/pyenv/versions/3.13.1/lib/python3.13/pathlib/_local.py", line 537, in open
+     |     return io.open(self, mode, buffering, encoding, errors, newline)
+     |            ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     | PermissionError: [Errno 13] Permission denied: '/tmp/ragtest_820f2q48/unreadable.json'
+FAIL EVALUATE-012           evaluate --student_search_results_path=/tmp/ragtest_820f2q48/ok_res.json --dataset_path=/tmp/ragtest_820f2q48/bad.json  (rc=1) traceback leaked
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |     )
+     |     ^
+     | pydantic_core._pydantic_core.ValidationError: 1 validation error for RagDataset
+     |   Invalid JSON: key must be a string at line 1 column 2 [type=json_invalid, input_value='{not json', input_type=str]
+     |     For further information visit https://errors.pydantic.dev/2.13/v/json_invalid
+FAIL EVALUATE-013           evaluate --student_search_results_path=/tmp/ragtest_820f2q48/ok_res.json --dataset_path=/tmp/ragtest_820f2q48/utf8.json  (rc=1) traceback leaked
+     |            ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |   File "/opt/pyenv/versions/3.13.1/lib/python3.13/pathlib/_abc.py", line 633, in read_text
+     |     return f.read()
+     |            ~~~~~~^^
+     |   File "<frozen codecs>", line 325, in decode
+     | UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte
+FAIL EVALUATE-014           evaluate --student_search_results_path=/tmp/ragtest_820f2q48/ok_res.json --dataset_path=/tmp/ragtest_820f2q48/schema.json  (rc=1) traceback leaked
+     |     )
+     |     ^
+     | pydantic_core._pydantic_core.ValidationError: 1 validation error for RagDataset
+     | rag_questions
+     |   Field required [type=missing, input_value={'foo': 1}, input_type=dict]
+     |     For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAIL EVALUATE-015           evaluate --student_search_results_path=/tmp/ragtest_820f2q48/ok_res.json --dataset_path=/tmp/ragtest_820f2q48/empty.json  (rc=1) traceback leaked
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |     )
+     |     ^
+     | pydantic_core._pydantic_core.ValidationError: 1 validation error for RagDataset
+     |   Invalid JSON: EOF while parsing a value at line 1 column 0 [type=json_invalid, input_value='', input_type=str]
+     |     For further information visit https://errors.pydantic.dev/2.13/v/json_invalid
+FAIL EVALUATE-019           evaluate --student_search_results_path=/tmp/ragtest_820f2q48/ok_res.json --dataset_path=/tmp/ragtest_820f2q48/mismatch.json  (rc=1) traceback leaked
+     |     )
+     |     ^
+     | pydantic_core._pydantic_core.ValidationError: 1 validation error for RagDataset
+     | rag_questions
+     |   Field required [type=missing, input_value={'search_results': [{'que..._index': 10}]}], 'k': 5}, input_type=dict]
+     |     For further information visit https://errors.pydantic.dev/2.13/v/missing
+FAIL EVALUATE-023           evaluate --student_search_results_path=/tmp/ragtest_820f2q48/res_empty.json --dataset_path=/tmp/ragtest_820f2q48/noq.json  (rc=1) traceback leaked
+     |     evaluator.evaluate()
+     |     ~~~~~~~~~~~~~~~~~~^^
+     |   File "/goinfre/mbougajd/RAG/src/evaluator.py", line 73, in evaluate
+     |     scores.update({k: total / len(self.dataset.rag_questions)})
+     |                       ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | ZeroDivisionError: float division by zero
+
+25 passed, 98 failed, 1 skipped  (see -m for non-automated cases)
+(rag-against-the-machine) ➜  RAG git:(main) ✗ 
