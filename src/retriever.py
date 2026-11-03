@@ -45,36 +45,31 @@ class Retriever:
         
     def _validate_input(self, query: str, top_k: int) -> None:
         """Validate search input and handle errors."""
+        if not isinstance(query, str):
+            raise RetrieverError("Query must be a string.")
+
+        if not query.strip():
+            raise RetrieverError("Query must not be empty.")
+
+        if not isinstance(top_k, int):
+            raise RetrieverError("top_k must be an integer.")
+
+        if top_k <= 0:
+            raise RetrieverError("top_k must be a positive integer.")
+
+    def search(self, query: str, top_k: int = 3) -> List[MinimalSource]:
+        """Return at most top_k unique source locations."""
         try:
-            if not isinstance(query, str):
-                raise RetrieverError("Query must be a string.")
+            self._validate_input(query, top_k)
 
-            if not query.strip():
-                raise RetrieverError("Query must not be empty.")
-
-            if not isinstance(top_k, int):
-                raise RetrieverError("top_k must be an integer.")
-
-            if top_k <= 0:
-                raise RetrieverError("top_k must be a positive integer.")
-
-        except RetrieverError:
-            raise
-
+            results, _ = self.retriever.retrieve(
+                bm25s.tokenize(query),
+                k=min(top_k, len(self.chunks))
+            )
         except Exception as error:
             raise RetrieverError(f"Invalid search input: {error}")
 
-
-    def search(self, query: str, top_k: int = 3) -> List[Dict[str, Any]]:
-        """Return at most top_k unique source locations."""
-        self._validate_input(query, top_k)
-
-        results, _ = self.retriever.retrieve(
-            bm25s.tokenize(query),
-            k=min(top_k, len(self.chunks))
-        )
-
-        sources: List[Dict[str, Any]] = []
+        sources: List[MinimalSource] = []
         seen = set()
 
         for result in results[0]:
@@ -138,7 +133,7 @@ class DatasetRetriever:
             dataset = RagDataset.model_validate(dataset)
 
             results = []
-            for idx, query in enumerate(dataset.rag_questions[:5], start=1):
+            for idx, query in enumerate(dataset.rag_questions, start=1):
                 try:
                     results.append({
                         "question_id": query.question_id,

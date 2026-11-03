@@ -55,6 +55,7 @@ class Evaluator:
         results_by_id = {}
         for result in self.student_results.search_results:
             results_by_id.update({result.question_id: result})
+        
 
         question_ids = set()
         for question in self.dataset.rag_questions:

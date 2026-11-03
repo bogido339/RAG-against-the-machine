@@ -6,7 +6,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from src.retriever import Retriever
 from src.error_classes import GeneratorErrro, DatasetGeneratorError
 from tqdm import tqdm
-from src.models import StudentSearchResults, StudentSearchResultsAndAnswer
+from src.models import StudentSearchResults, StudentSearchResultsAndAnswer, MinimalSource
 
 
 class Qwen:
@@ -52,7 +52,7 @@ class Generator:
         self.model = Qwen()
         self.retriever = Retriever()
 
-    def _load_chunks(self, sources: List[Dict]) -> List[str]:
+    def _load_chunks(self, sources: List[MinimalSource]) -> List[str]:
         chunks = []
 
         for source in sources:
@@ -81,13 +81,13 @@ Question:
 
 Answer:"""
 
-    def generate(self, query: str, chunks: List[Dict]) -> str:
+    def generate(self, query: str, chunks: List[MinimalSource]) -> str:
 
         prompt = self.get_prompt(query, self._load_chunks(chunks))
 
         return self.model.generate_response(prompt)
 
-    def answer(self, query: str, k: int = 5) -> str:
+    def answer(self, query: str, k: int = 5) -> None:
         """Retrieve relevant chunks and answer one question."""
 
         top_chunks = self.retriever.search(query, k)
@@ -140,7 +140,7 @@ class DatasetGenerator:
         results = []
 
         try:
-            for query in tqdm(data.search_results):
+            for query in tqdm(data.search_results[:2]):
                 try:
                     question_id = query.question_id
                     question = query.question
@@ -159,7 +159,7 @@ class DatasetGenerator:
                 except Exception as e:
                     print(
                         f"Warning: Failed to process question ID "
-                        f"'{query.get('question_id', 'unknown')}'. Error: {e}")
+                        f"'{query.question_id}'. Error: {e}")
 
             output = StudentSearchResultsAndAnswer(
                 search_results=results,
@@ -172,37 +172,104 @@ class DatasetGenerator:
             raise DatasetGeneratorError(
                 f"Critical error while processing dataset: {e}")
 
-    def _save(
-        self, data: Dict[str, Any], input_path: Path, save_directory: Path
+    def _save(self, data: StudentSearchResultsAndAnswer,
+        input_path: Path, save_directory: Path
     ) -> None:
         """Save generated dataset to a JSON file."""
-
         output_path = save_directory / input_path.name
 
         try:
             save_directory.mkdir(parents=True, exist_ok=True)
 
             with output_path.open("w", encoding="utf-8") as file:
-                json.dump(data, file, indent=4, ensure_ascii=False)
+                json.dump(
+                    data.model_dump(mode="json"),
+                    file,
+                    indent=4,
+                    ensure_ascii=False
+                )
 
             print(f"Saved results to {output_path}")
 
         except OSError as e:
             raise DatasetGeneratorError(
-                f"Failed to save dataset to '{output_path}': {e}")
-        
+                f"Failed to save dataset to '{output_path}': {e}"
+            ) from e
+
+    def _validate_input(
+            self, student_search_results_path: str, save_directory: str
+    ) -> None:
+        """Validate dataset input and output paths."""
+
+        if not isinstance(student_search_results_path, str):
+            raise DatasetGeneratorError(
+                "student_search_results_path must be a string."
+            )
+
+        if not student_search_results_path.strip():
+            raise DatasetGeneratorError(
+                "student_search_results_path must not be empty."
+            )
+
+        if not isinstance(save_directory, str):
+            raise DatasetGeneratorError(
+                "save_directory must be a string."
+            )
+
+        if not save_directory.strip():
+            raise DatasetGeneratorError(
+                "save_directory must not be empty."
+            )
+
+        input_path = Path(student_search_results_path)
+        output_dir = Path(save_directory)
+
+        if not input_path.is_file():
+            raise DatasetGeneratorError(
+                f"Dataset file does not exist: '{input_path}'"
+            )
+
+        if input_path.suffix.lower() != ".json":
+            raise DatasetGeneratorError(
+                "Dataset file must have a .json extension."
+            )
+
+        if output_dir.exists() and not output_dir.is_dir():
+            raise DatasetGeneratorError(
+                f"Output path is not a directory: '{output_dir}'"
+            )
+
+        if not output_dir.is_absolute() and not output_dir.parts:
+            raise DatasetGeneratorError(
+                "Invalid output directory."
+            )
 
     def answer_dataset(
-            self,student_search_results_path: str,save_directory: str
+        self,
+        student_search_results_path: str,
+        save_directory: str
     ) -> None:
+        """Generate answers for a dataset and save the results."""
+
+        self._validate_input(
+            student_search_results_path,
+            save_directory
+        )
+
         input_path = Path(student_search_results_path)
-        data = self._load_search_results(input_path)
+        output_dir = Path(save_directory)
 
         try:
-            output = self._process_dataset(data)
-            self._save(output, input_path, Path(save_directory))
+            data = self._load_search_results(input_path)
 
-        except Exception as e:
+            output = self._process_dataset(data)
+
+            self._save(output, input_path, output_dir)
+
+        except DatasetGeneratorError:
+            raise
+
+        except (OSError, ValueError, TypeError) as error:
             raise DatasetGeneratorError(
-                f"Critical error while processing or saving dataset for "
-                f"'{input_path}': {e}")
+                f"Failed to process dataset '{input_path}': {error}"
+            )
