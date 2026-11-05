@@ -5,6 +5,7 @@ import bm25s
 from src.error_classes import RetrieverError, DatasetRetrieverError
 from src.models import MinimalSource, RagDataset, StudentSearchResults
 from pydantic import ValidationError
+import sys
 
 
 class Retriever:
@@ -66,6 +67,7 @@ class Retriever:
                 bm25s.tokenize(query),
                 k=min(top_k, len(self.chunks))
             )
+
         except Exception as error:
             raise RetrieverError(f"Invalid search input: {error}")
 

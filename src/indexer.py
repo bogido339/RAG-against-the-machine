@@ -76,10 +76,7 @@ class Indexer:
         )
 
     def _create_chunks(
-        self,
-        file_path: Path,
-        content: str,
-        chunks: List[str],
+            self, file_path: Path, content: str, chunks: List[str]
     ) -> List[Dict[str, Any]]:
         """Convert text chunks into indexed chunk records."""
         result = []
@@ -172,7 +169,7 @@ class Indexer:
             
             retriever = bm25s.BM25()
             corpus_tokens = bm25s.tokenize(corpus)
-            retriever.index(corpus_tokens)
+            retriever.index(corpus_tokens, leave_progress=True)
             retriever.save("data/processed/bm25_index", corpus=corpus)
             print(f"Ingestion complete! Indices saved under {"data/processed"}")
             

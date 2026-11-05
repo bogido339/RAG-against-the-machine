@@ -49,8 +49,11 @@ class Generator:
     """Generate answers using retrieved context."""
 
     def __init__(self):
-        self.model = Qwen()
-        self.retriever = Retriever()
+        try:
+            self.model = Qwen()
+            self.retriever = Retriever()
+        except Exception as e:
+            print(f"Error initializing Generator components: {e}")
 
     def _load_chunks(self, sources: List[MinimalSource]) -> List[str]:
         chunks = []

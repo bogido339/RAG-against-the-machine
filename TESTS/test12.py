@@ -32,8 +32,8 @@ attributes_and_methods = [attr for attr in dir(retriever) if not attr.startswith
 # print(attributes_and_methods)
 
 corpus_tokens = bm25s.tokenize(corpus)
-print("TYPE:", type(corpus_tokens))
-print(corpus_tokens.ids)
-print(corpus_tokens.vocab)
+# print("TYPE:", type(corpus_tokens))
+# print(corpus_tokens.ids)
+# print(corpus_tokens.vocab)
 retriever.index(corpus_tokens)
 retriever.save("data/processed/bm25_index", corpus=corpus)
