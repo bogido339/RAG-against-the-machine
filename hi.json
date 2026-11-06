@@ -1,0 +1,55 @@
+{
+    "search_results": [
+        {
+            "question_id": "f2893710-0ebc-41a5-af16-00f3461cf34f",
+            "question": "What prefixes does the AutoWeightsLoader skip in NemotronNASForCausalLM when tie_word_embeddings is True?",
+            "retrieved_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/grok1.py",
+                    "first_character_index": 21439,
+                    "last_character_index": 22732
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/granite.py",
+                    "first_character_index": 19762,
+                    "last_character_index": 20355
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/starcoder2.py",
+                    "first_character_index": 13832,
+                    "last_character_index": 14609
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/chameleon.py",
+                    "first_character_index": 42292,
+                    "last_character_index": 42851
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/olmo2.py",
+                    "first_character_index": 15687,
+                    "last_character_index": 15983
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/gemma2.py",
+                    "first_character_index": 16988,
+                    "last_character_index": 17341
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/olmo.py",
+                    "first_character_index": 14564,
+                    "last_character_index": 14923
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/tests/prefix_caching/test_prefix_caching.py",
+                    "first_character_index": 4291,
+                    "last_character_index": 5197
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/models/opt.py",
+                    "first_character_index": 16181,
+                    "last_character_index": 16571
+                }
+            ]
+        }
+    ]
+}

@@ -106,13 +106,17 @@ class Retriever:
 
     def topk_search(self, query: str, top_k: int = 3) -> None:
         """Print retrieved source locations."""
-        for source in self.search(query, top_k):
-            print(
-                f"{source.file_path} "
-                f"[{source.first_character_index}:"
-                f"{source.last_character_index}]"
+        try:
+            for source in self.search(query, top_k):
+                print(
+                    f"{source.file_path} "
+                    f"[{source.first_character_index}:"
+                    f"{source.last_character_index}]"
+                )
+        except Exception as e:
+            raise RetrieverError(
+                f"An unexpected error occurred during the search operation: {e}"
             )
-
 
 class DatasetRetriever:
     """Search a dataset and save student search results."""
@@ -131,7 +135,7 @@ class DatasetRetriever:
         try:
             with open(dataset_path, "r", encoding="utf-8") as file:
                 dataset = json.load(file)
-            #-------------------------------------------
+
             dataset = RagDataset.model_validate(dataset)
 
             results = []
@@ -145,7 +149,15 @@ class DatasetRetriever:
                         ),
                     })
                 except (KeyError, RetrieverError) as e:
-                    print(f"Warning: Skipping query #{idx} due to error ({type(e).__name__}): {e}")
+                    print(
+                        f"Warning: Skipping query #{idx} "
+                        f"due to error ({type(e).__name__}): {e}"
+                    )
+                except Exception as e:
+                    raise DatasetRetrieverError(
+                        f"An unexpected error occurred during "
+                        f"the search operation: {e}"
+                    )
 
         except OSError as error:
             raise DatasetRetrieverError(
@@ -168,7 +180,6 @@ class DatasetRetriever:
         try:
             output_directory.mkdir(parents=True, exist_ok=True)
 
-            #-------------------------------------------
             output = StudentSearchResults(
                 search_results=results,
                 k=top_k

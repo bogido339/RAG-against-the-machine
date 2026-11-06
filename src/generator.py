@@ -6,15 +6,22 @@ from src.error_classes import GeneratorError, DatasetGeneratorError
 from tqdm import tqdm
 from src.models import StudentSearchResults, StudentSearchResultsAndAnswer, MinimalSource
 from pydantic import ValidationError
+import sys
 
 
 class Qwen:
     """Handle text generation using Qwen."""
 
-    def __init__(self, model_name: str = "Qwen/Qwen3-0.6B", max_context_tokens: int = 4096):
+    def __init__(
+            self, model_name: str = "Qwen/Qwen3-0.6B",
+            max_new_tokens: int = 1024
+    ) -> None:
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForCausalLM.from_pretrained(model_name)
-        self.max_context_tokens = max_context_tokens # تحديد حجم نافذة السياق
+
+        self.max_context_tokens = self.model.config.max_position_embeddings
+        self.max_new_tokens = max_new_tokens
+        self.max_prompt_tokens = self.max_context_tokens - self.max_new_tokens
 
     def count_tokens(self, text: str) -> int:
         """Utility to count tokens for a given text."""
@@ -40,7 +47,7 @@ class Qwen:
 
         input_length = len(inputs["input_ids"][0])
 
-        if input_length > self.max_context_tokens:
+        if input_length > self.max_prompt_tokens:
             raise GeneratorError(
                 f"Context window exceeded! The prompt has {input_length} tokens, "
                 f"but the maximum allowed is {self.max_context_tokens}."
@@ -48,7 +55,7 @@ class Qwen:
 
         response_ids = self.model.generate(
             **inputs,
-            max_new_tokens=1024
+            max_new_tokens=self.max_new_tokens
         )[0][input_length:]
 
         return self.tokenizer.decode(
@@ -72,17 +79,25 @@ class Generator:
         chunks = []
 
         for source in sources:
-            try:
-                file_path = Path(source.file_path)
+            file_path = Path(source.file_path)
 
+            try:
                 content = file_path.read_text(encoding="utf-8")
-        
                 start = source.first_character_index
                 end = source.last_character_index
+                chunk_text = content[start:end].strip()
 
-                chunks.append(content[start:end])
-            except FileNotFoundError:
-                print(f"Warning: File {file_path} not found. Skipping chunk.")
+                if not chunk_text:
+                    print(
+                        f"Warning: Extracted chunk from "
+                        f"{file_path} is empty. Skipping..."
+                    )
+                    continue
+                
+                chunks.append(chunk_text)
+
+            except Exception as e:
+                print(f"Warning: Failed to read {file_path}. Error: {e}")
                 continue
 
         return chunks
@@ -104,10 +119,16 @@ Answer:"""
     def generate(self, query: str, chunks: list[MinimalSource]) -> str:
         
         loaded_chunks = self._load_chunks(chunks)
-        
+
+        if not loaded_chunks:
+            raise GeneratorError(
+                "No valid content could be extracted "
+                "from the retrieved sources. "
+                "Files might be missing or empty."
+            )
         prompt = self.get_prompt(query, loaded_chunks)
         
-        while self.model.count_tokens(prompt) > self.model.max_context_tokens:
+        while self.model.count_tokens(prompt) > self.model.max_prompt_tokens:
             if not loaded_chunks:
                 raise GeneratorError("The query itself exceeds the maximum context window.")
             
@@ -120,6 +141,8 @@ Answer:"""
 
     def answer(self, search_result: str, k: int = 5) -> None:
         """Retrieve relevant chunks and answer one question."""
+
+        print(self.model.max_context_tokens)
 
         top_chunks = self.retriever.search(search_result, k)
 
@@ -186,7 +209,7 @@ class DatasetGenerator:
                 except Exception as e:
                     print(
                         f"Warning: Failed to process question ID "
-                        f"'{search_result.question_id}'. Error: {e}")
+                        f"'{question_id}'. Error: {e}")
 
             output = StudentSearchResultsAndAnswer(
                 search_results=results,
