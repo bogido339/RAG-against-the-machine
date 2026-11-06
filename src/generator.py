@@ -1,20 +1,24 @@
 import json
 from pathlib import Path
-from typing import Any, List, Dict
-
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from src.retriever import Retriever
-from src.error_classes import GeneratorErrro, DatasetGeneratorError
+from src.error_classes import GeneratorError, DatasetGeneratorError
 from tqdm import tqdm
 from src.models import StudentSearchResults, StudentSearchResultsAndAnswer, MinimalSource
+from pydantic import ValidationError
 
 
 class Qwen:
     """Handle text generation using Qwen."""
 
-    def __init__(self, model_name: str = "Qwen/Qwen3-0.6B"):
+    def __init__(self, model_name: str = "Qwen/Qwen3-0.6B", max_context_tokens: int = 4096):
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForCausalLM.from_pretrained(model_name)
+        self.max_context_tokens = max_context_tokens # تحديد حجم نافذة السياق
+
+    def count_tokens(self, text: str) -> int:
+        """Utility to count tokens for a given text."""
+        return len(self.tokenizer.encode(text))
 
     def generate_response(self, user_input: str) -> str:
         """Generate a response from Qwen."""
@@ -25,19 +29,27 @@ class Qwen:
             }
         ]
 
-        text = self.tokenizer.apply_chat_template(
+        inputs = self.tokenizer.apply_chat_template(
             messages,
-            tokenize=False,
+            tokenize=True,
             add_generation_prompt=True,
-            enable_thinking=False
+            enable_thinking=False,
+            return_tensors="pt",
+            return_dict=True
         )
 
-        inputs = self.tokenizer(text, return_tensors="pt")
+        input_length = len(inputs["input_ids"][0])
+
+        if input_length > self.max_context_tokens:
+            raise GeneratorError(
+                f"Context window exceeded! The prompt has {input_length} tokens, "
+                f"but the maximum allowed is {self.max_context_tokens}."
+            )
 
         response_ids = self.model.generate(
             **inputs,
             max_new_tokens=1024
-        )[0][len(inputs.input_ids[0]):]
+        )[0][input_length:]
 
         return self.tokenizer.decode(
             response_ids,
@@ -53,24 +65,29 @@ class Generator:
             self.model = Qwen()
             self.retriever = Retriever()
         except Exception as e:
-            print(f"Error initializing Generator components: {e}")
+            raise GeneratorError(
+                f"Error initializing Generator components: {e}")
 
-    def _load_chunks(self, sources: List[MinimalSource]) -> List[str]:
+    def _load_chunks(self, sources: list[MinimalSource]) -> list[str]:
         chunks = []
 
         for source in sources:
-            file_path = Path(source.file_path)
+            try:
+                file_path = Path(source.file_path)
 
-            content = file_path.read_text(encoding="utf-8")
-    
-            start = source.first_character_index
-            end = source.last_character_index
+                content = file_path.read_text(encoding="utf-8")
+        
+                start = source.first_character_index
+                end = source.last_character_index
 
-            chunks.append(content[start:end])
+                chunks.append(content[start:end])
+            except FileNotFoundError:
+                print(f"Warning: File {file_path} not found. Skipping chunk.")
+                continue
 
         return chunks
 
-    def get_prompt(self, query: str, top_chunks: list[str]) -> str:
+    def get_prompt(self, search_result: str, top_chunks: list[str]) -> str:
         """Build the RAG prompt."""
         context = "\n\n".join(top_chunks)
 
@@ -80,22 +97,33 @@ Context:
 {context}
 
 Question:
-{query}
+{search_result}
 
 Answer:"""
 
-    def generate(self, query: str, chunks: List[MinimalSource]) -> str:
-
-        prompt = self.get_prompt(query, self._load_chunks(chunks))
+    def generate(self, query: str, chunks: list[MinimalSource]) -> str:
+        
+        loaded_chunks = self._load_chunks(chunks)
+        
+        prompt = self.get_prompt(query, loaded_chunks)
+        
+        while self.model.count_tokens(prompt) > self.model.max_context_tokens:
+            if not loaded_chunks:
+                raise GeneratorError("The query itself exceeds the maximum context window.")
+            
+            print("Warning: Context window exceeded. Dropping the lowest ranked chunk...")
+            loaded_chunks.pop()
+            
+            prompt = self.get_prompt(query, loaded_chunks)
 
         return self.model.generate_response(prompt)
 
-    def answer(self, query: str, k: int = 5) -> None:
+    def answer(self, search_result: str, k: int = 5) -> None:
         """Retrieve relevant chunks and answer one question."""
 
-        top_chunks = self.retriever.search(query, k)
+        top_chunks = self.retriever.search(search_result, k)
 
-        print(self.generate(query, top_chunks))
+        print(self.generate(search_result, top_chunks))
 
 
 class DatasetGenerator:
@@ -120,7 +148,6 @@ class DatasetGenerator:
                         f"The search results file is empty"
                         f" (0 bytes): {input_path}")
 
-                #------------------------------------------------------
                 data = StudentSearchResults.model_validate_json(content)
 
         except PermissionError as e:
@@ -128,11 +155,8 @@ class DatasetGenerator:
                 f"Permission denied: You do not have read access to "
                 f"'{input_path}'. Check file permissions."
             )
-        except json.decoder.JSONDecodeError as e:
-            raise DatasetGeneratorError(
-                f"Failed to parse JSON from '{input_path}'. "
-                f"The file contains invalid JSON. Details: {e}"
-            )
+        except (json.decoder.JSONDecodeError, ValidationError) as e:
+            raise DatasetGeneratorError(f"Invalid dataset format: {e}")
 
         return data
     
@@ -143,11 +167,11 @@ class DatasetGenerator:
         results = []
 
         try:
-            for query in tqdm(data.search_results[:2]):
+            for search_result in tqdm(data.search_results):
                 try:
-                    question_id = query.question_id
-                    question = query.question
-                    retrieved_sources = query.retrieved_sources
+                    question_id = search_result.question_id
+                    question = search_result.question
+                    retrieved_sources = search_result.retrieved_sources
 
                     answer = self.generator.generate(question, retrieved_sources)
 
@@ -162,7 +186,7 @@ class DatasetGenerator:
                 except Exception as e:
                     print(
                         f"Warning: Failed to process question ID "
-                        f"'{query.question_id}'. Error: {e}")
+                        f"'{search_result.question_id}'. Error: {e}")
 
             output = StudentSearchResultsAndAnswer(
                 search_results=results,
@@ -196,8 +220,7 @@ class DatasetGenerator:
 
         except OSError as e:
             raise DatasetGeneratorError(
-                f"Failed to save dataset to '{output_path}': {e}"
-            ) from e
+                f"Failed to save dataset to '{output_path}': {e}")
 
     def _validate_input(
             self, student_search_results_path: str, save_directory: str
@@ -248,16 +271,11 @@ class DatasetGenerator:
             )
 
     def answer_dataset(
-        self,
-        student_search_results_path: str,
-        save_directory: str
+            self, student_search_results_path: str, save_directory: str
     ) -> None:
         """Generate answers for a dataset and save the results."""
 
-        self._validate_input(
-            student_search_results_path,
-            save_directory
-        )
+        self._validate_input(student_search_results_path, save_directory)
 
         input_path = Path(student_search_results_path)
         output_dir = Path(save_directory)
@@ -272,7 +290,7 @@ class DatasetGenerator:
         except DatasetGeneratorError:
             raise
 
-        except (OSError, ValueError, TypeError) as error:
+        except Exception as error:
             raise DatasetGeneratorError(
                 f"Failed to process dataset '{input_path}': {error}"
             )

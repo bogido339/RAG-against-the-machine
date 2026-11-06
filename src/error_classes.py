@@ -14,7 +14,7 @@ class DatasetRetrieverError(RagError):
     ...
 
 
-class GeneratorErrro(RagError):
+class GeneratorError(RagError):
     ...
 
 

@@ -1,7 +1,5 @@
 from pathlib import Path
 from src.error_classes import EvaluatorError
-import json
-
 from src.models import RagDataset, StudentSearchResults
 
 
