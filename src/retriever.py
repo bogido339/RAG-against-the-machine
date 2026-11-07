@@ -32,15 +32,15 @@ class Retriever:
                 bm25_index,
                 load_corpus=True
             )
-        except FileNotFoundError:
+        except FileNotFoundError as e:
             raise RetrieverError(
-                "Index files are missing. Run: "
-                "uv run python -m src index --max_chunk_size 2000"
+                f"Index files are missing: {e}\n"
+                "Run: uv run python -m src index --max_chunk_size 2000"
             )
         except PermissionError:
             raise RetrieverError("Permission denied while reading index files.")
-        except (json.JSONDecodeError, UnicodeError):
-            raise RetrieverError("Cannot read chunks JSON.")
+        except (json.JSONDecodeError, UnicodeError) as e:
+            raise RetrieverError(f"Cannot read chunks JSON. {e}")
         except (KeyError, TypeError):
             raise RetrieverError("Invalid chunk structure.")
         
@@ -90,7 +90,7 @@ class Retriever:
                 continue
 
             seen.add(location)
-            #-------------------------------------------
+
             source = MinimalSource(
                 file_path=location[0],
                 first_character_index=location[1],
@@ -169,9 +169,9 @@ class DatasetRetriever:
         except (KeyError, TypeError):
             raise DatasetRetrieverError(
                 f"Invalid dataset structure in {dataset_path}.")
-        except ValidationError as error:
+        except ValidationError:
             raise DatasetRetrieverError(
-                f"Invalid dataset JSON '{dataset_path}': {error}"
+                f"Invalid dataset JSON '{dataset_path}': Schema validation failed."
             )
 
         output_directory = Path(save_directory)

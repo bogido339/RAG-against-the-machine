@@ -1,6 +1,6 @@
 MAIN = src
 FLAG = index
-ARGS = 2000
+ARGS = --max_chunk_size 2000
 
 install:
 	uv sync

@@ -93,7 +93,6 @@ class Indexer:
 
             end_index = start_index + len(chunk)
 
-            #-------------------------------------------
             chunk_record = Chunk(
                 file_path=str(file_path),
                 first_character_index=start_index,

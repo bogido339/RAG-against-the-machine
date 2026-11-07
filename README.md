@@ -26,12 +26,14 @@ exposed through a CLI so it can be run and evaluated end-to-end.
 - [`uv`](https://docs.astral.sh/uv/) as the package/project manager
 ### Installation
  
+ 
 ```bash
 git clone <your-repo-url>
 cd rag-against-the-machine
 make install
 ```
  
+
 `make install` runs `uv sync`, which creates the virtual environment and installs all
 dependencies from `pyproject.toml` / `uv.lock`.
  
