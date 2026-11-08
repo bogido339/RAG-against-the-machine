@@ -190,7 +190,7 @@ class DatasetGenerator:
         results = []
 
         try:
-            for search_result in tqdm(data.search_results[:1]):
+            for search_result in tqdm(data.search_results):
                 try:
                     question_id = search_result.question_id
                     question = search_result.question
