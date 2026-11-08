@@ -22,7 +22,8 @@ dependencies = [
 [dependency-groups]
 dev = [
     "flake8>=7.0.0",
-    "mypy>=1.10.0"
+    "mypy>=1.10.0",
+    "pytest>=9.2.0",
 ]
 
 [build-system]

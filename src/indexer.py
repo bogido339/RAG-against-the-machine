@@ -147,14 +147,20 @@ class Indexer:
 
     def _save_chunks(self, chunks: List[Dict[str, Any]]) -> None:
         """Save chunk metadata to disk."""
-        self.output_directory.mkdir(parents=True, exist_ok=True)
-        output_path = self.output_directory / "chunks.json"
-
+        
         try:
+            self.output_directory.mkdir(parents=True, exist_ok=True)
+            output_path = self.output_directory / "chunks.json"
+
             with output_path.open("w", encoding="utf-8") as file:
                 json.dump(chunks, file, indent=4)
         except OSError as e:
             raise IndexerError(f"file_path: {output_path}, {e}")
+        except Exception as error:
+            raise IndexerError(
+                f"Unexpected error while saving chunks "
+                f"({type(error).__name__}): {error}"
+            ) 
 
     def _build_bm25_index(self, chunks: List[Dict[str, Any]]) -> None:
         """Build and save the BM25 index."""
@@ -167,7 +173,8 @@ class Indexer:
             corpus = [chunk["content"] for chunk in chunks]
             
             retriever = bm25s.BM25()
-            corpus_tokens = bm25s.tokenize(corpus)
+
+            corpus_tokens = bm25s.tokenize(corpus, show_progress=True)
             retriever.index(corpus_tokens, leave_progress=True)
             retriever.save("data/processed/bm25_index", corpus=corpus)
             print(f"Ingestion complete! Indices saved under {"data/processed"}")
@@ -175,6 +182,12 @@ class Indexer:
         except OSError as error:
             raise IndexerError(
                 f"file_path: data/processed/bm25_index, {error}")
+        except Exception as error:
+            raise IndexerError(
+                f"Unexpected BM25 indexing error "
+                f"({type(error).__name__}): {error}"
+            )
+
 
     def build_index(self) -> None:
         """Run the complete indexing pipeline."""

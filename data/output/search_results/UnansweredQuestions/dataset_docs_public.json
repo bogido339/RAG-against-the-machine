@@ -1,6 +1,62 @@
 {
     "search_results": [
         {
+            "question_id": "237cd408-5d64-4ad1-a894-3cdc6eca3973",
+            "question": "What HTTP endpoint is used to dynamically load a LoRA adapter in vLLM?",
+            "retrieved_sources": [
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/lora.md",
+                    "first_character_index": 4695,
+                    "last_character_index": 6098
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/plugins/lora_resolvers/README.md",
+                    "first_character_index": 0,
+                    "last_character_index": 829
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/examples/others/tensorize_vllm_model.py",
+                    "first_character_index": 3857,
+                    "last_character_index": 4456
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/lora.md",
+                    "first_character_index": 6100,
+                    "last_character_index": 8080
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/lora.md",
+                    "first_character_index": 4075,
+                    "last_character_index": 4693
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/entrypoints/openai/serving_models.py",
+                    "first_character_index": 10634,
+                    "last_character_index": 11280
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/model_loader/tensorizer.py",
+                    "first_character_index": 6905,
+                    "last_character_index": 8825
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/lora.md",
+                    "first_character_index": 2072,
+                    "last_character_index": 4069
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/entrypoints/openai/serving_models.py",
+                    "first_character_index": 8712,
+                    "last_character_index": 10620
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/features/lora.md",
+                    "first_character_index": 0,
+                    "last_character_index": 1874
+                }
+            ]
+        },
+        {
             "question_id": "cc83c230-099f-4c11-aeab-8c09715c5942",
             "question": "What command can be used to evaluate the accuracy of a quantized model using lm_eval with vLLM?",
             "retrieved_sources": [
@@ -544,14 +600,14 @@
                     "last_character_index": 804
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/quark/quark.py",
-                    "first_character_index": 0,
-                    "last_character_index": 1142
-                },
-                {
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/quark/schemes/quark_w8a8_int8.py",
                     "first_character_index": 0,
                     "last_character_index": 707
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/quark/quark.py",
+                    "first_character_index": 0,
+                    "last_character_index": 1142
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/compressed_tensors/schemes/compressed_tensors_w4a16_24.py",
@@ -1038,14 +1094,14 @@
                     "last_character_index": 1308
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/docs/deployment/frameworks/anything-llm.md",
-                    "first_character_index": 0,
-                    "last_character_index": 1316
-                },
-                {
                     "file_path": "data/raw/vllm-0.10.1/docs/deployment/frameworks/dify.md",
                     "first_character_index": 0,
                     "last_character_index": 1899
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/deployment/frameworks/anything-llm.md",
+                    "first_character_index": 0,
+                    "last_character_index": 1316
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/docs/serving/offline_inference.md",
@@ -2667,14 +2723,14 @@
                     "last_character_index": 5294
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/inc.py",
-                    "first_character_index": 0,
-                    "last_character_index": 1381
-                },
-                {
                     "file_path": "data/raw/vllm-0.10.1/docs/getting_started/installation/intel_gaudi.md",
                     "first_character_index": 7305,
                     "last_character_index": 8774
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/model_executor/layers/quantization/inc.py",
+                    "first_character_index": 0,
+                    "last_character_index": 1381
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/docs/features/quantization/supported_hardware.md",
@@ -3064,14 +3120,14 @@
                     "last_character_index": 447
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/distributed/kv_transfer/README.md",
-                    "first_character_index": 1,
-                    "last_character_index": 1752
-                },
-                {
                     "file_path": "data/raw/vllm-0.10.1/tests/models/language/pooling/test_gritlm.py",
                     "first_character_index": 2467,
                     "last_character_index": 3682
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/vllm/distributed/kv_transfer/README.md",
+                    "first_character_index": 1,
+                    "last_character_index": 1752
                 }
             ]
         },
@@ -3461,9 +3517,9 @@
                     "last_character_index": 4855
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/vllm/benchmarks/datasets.py",
-                    "first_character_index": 34674,
-                    "last_character_index": 35999
+                    "file_path": "data/raw/vllm-0.10.1/benchmarks/benchmark_dataset.py",
+                    "first_character_index": 21980,
+                    "last_character_index": 23300
                 }
             ]
         },
@@ -3726,6 +3782,11 @@
                     "last_character_index": 929
                 },
                 {
+                    "file_path": "data/raw/vllm-0.10.1/tests/models/registry.py",
+                    "first_character_index": 2234,
+                    "last_character_index": 4017
+                },
+                {
                     "file_path": "data/raw/vllm-0.10.1/examples/online_serving/openai_transcription_client.py",
                     "first_character_index": 0,
                     "last_character_index": 710
@@ -3734,11 +3795,6 @@
                     "file_path": "data/raw/vllm-0.10.1/docs/models/supported_models.md",
                     "first_character_index": 597,
                     "last_character_index": 2003
-                },
-                {
-                    "file_path": "data/raw/vllm-0.10.1/tests/models/registry.py",
-                    "first_character_index": 2234,
-                    "last_character_index": 4017
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/docs/deployment/frameworks/chatbox.md",
@@ -4525,9 +4581,9 @@
                     "last_character_index": 7111
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/docs/serving/openai_compatible_server.md",
-                    "first_character_index": 5423,
-                    "last_character_index": 6213
+                    "file_path": "data/raw/vllm-0.10.1/vllm/entrypoints/llm.py",
+                    "first_character_index": 54267,
+                    "last_character_index": 55841
                 }
             ]
         },
@@ -5055,14 +5111,14 @@
                     "last_character_index": 31557
                 },
                 {
-                    "file_path": "data/raw/vllm-0.10.1/docs/deployment/frameworks/dstack.md",
-                    "first_character_index": 2738,
-                    "last_character_index": 3169
-                },
-                {
                     "file_path": "data/raw/vllm-0.10.1/docs/models/supported_models.md",
                     "first_character_index": 49446,
                     "last_character_index": 50367
+                },
+                {
+                    "file_path": "data/raw/vllm-0.10.1/docs/deployment/frameworks/dstack.md",
+                    "first_character_index": 2738,
+                    "last_character_index": 3169
                 },
                 {
                     "file_path": "data/raw/vllm-0.10.1/examples/offline_inference/qwen3_reranker.py",
@@ -5528,16 +5584,17 @@
                     "last_character_index": 434
                 },
                 {
+                    "file_path": "data/raw/vllm-0.10.1/examples/online_serving/openai_chat_embedding_client_for_multimodal.py",
+                    "first_character_index": 2755,
+                    "last_character_index": 3625
+                },
+                {
                     "file_path": "data/raw/vllm-0.10.1/docs/cli/README.md",
                     "first_character_index": 1758,
                     "last_character_index": 3739
-                },
-                {
-                    "file_path": "data/raw/vllm-0.10.1/examples/offline_inference/openai_batch/README.md",
-                    "first_character_index": 11347,
-                    "last_character_index": 12293
                 }
             ]
         }
-    ]
+    ],
+    "k": 10
 }
