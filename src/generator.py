@@ -4,9 +4,14 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from src.retriever import Retriever
 from src.error_classes import GeneratorError, DatasetGeneratorError
 from tqdm import tqdm
-from src.models import StudentSearchResults, StudentSearchResultsAndAnswer, MinimalSource
+from src.models import (
+    StudentSearchResults,
+    StudentSearchResultsAndAnswer,
+    MinimalSource,
+    MinimalAnswer
+)
 from pydantic import ValidationError
-import sys
+from typing import cast
 
 
 class Qwen:
@@ -36,38 +41,42 @@ class Qwen:
             }
         ]
 
-        inputs = self.tokenizer.apply_chat_template(
+        text = self.tokenizer.apply_chat_template(
             messages,
-            tokenize=True,
+            tokenize=False,
             add_generation_prompt=True,
-            enable_thinking=False,
-            return_tensors="pt",
-            return_dict=True
+            enable_thinking=False
         )
 
-        input_length = len(inputs["input_ids"][0])
+        inputs = self.tokenizer(text, return_tensors="pt")
+
+        input_length = len(inputs.input_ids[0])
 
         if input_length > self.max_prompt_tokens:
             raise GeneratorError(
-                f"Context window exceeded! The prompt has {input_length} tokens, "
+                f"Context window exceeded! "
+                f"The prompt has {input_length} tokens, "
                 f"but the maximum allowed is {self.max_context_tokens}."
             )
 
         response_ids = self.model.generate(
             **inputs,
-            max_new_tokens=self.max_new_tokens
+            max_new_tokens=1024
         )[0][input_length:]
 
-        return self.tokenizer.decode(
-            response_ids,
-            skip_special_tokens=True
+        return cast(
+            str,
+            self.tokenizer.decode(
+                response_ids,
+                skip_special_tokens=True
+            )
         )
 
 
 class Generator:
     """Generate answers using retrieved context."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         try:
             self.model = Qwen()
             self.retriever = Retriever()
@@ -93,7 +102,7 @@ class Generator:
                         f"{file_path} is empty. Skipping..."
                     )
                     continue
-                
+
                 chunks.append(chunk_text)
 
             except Exception as e:
@@ -117,7 +126,7 @@ Question:
 Answer:"""
 
     def generate(self, query: str, chunks: list[MinimalSource]) -> str:
-        
+
         loaded_chunks = self._load_chunks(chunks)
 
         if not loaded_chunks:
@@ -127,22 +136,25 @@ Answer:"""
                 "Files might be missing or empty."
             )
         prompt = self.get_prompt(query, loaded_chunks)
-        
+
         while self.model.count_tokens(prompt) > self.model.max_prompt_tokens:
             if not loaded_chunks:
-                raise GeneratorError("The query itself exceeds the maximum context window.")
-            
-            print("Warning: Context window exceeded. Dropping the lowest ranked chunk...")
+                raise GeneratorError(
+                    "The query itself exceeds the maximum context window."
+                )
+
+            print(
+                "Warning: Context window exceeded. "
+                "Dropping the lowest ranked chunk..."
+            )
             loaded_chunks.pop()
-            
+
             prompt = self.get_prompt(query, loaded_chunks)
 
         return self.model.generate_response(prompt)
 
     def answer(self, search_result: str, k: int = 5) -> None:
         """Retrieve relevant chunks and answer one question."""
-
-        print(self.model.max_context_tokens)
 
         top_chunks = self.retriever.search(search_result, k)
 
@@ -152,17 +164,17 @@ Answer:"""
 class DatasetGenerator:
     """Generate answers for a search-results dataset."""
 
-    def __init__(self):
-        self.generator = Generator()
+    def __init__(self) -> None:
+        self.generator: Generator = Generator()
 
     def _load_search_results(
             self, input_path: Path
     ) -> StudentSearchResults:
-        
+
         if not input_path.exists():
             raise DatasetGeneratorError(
                 f"The search results file does not exist: {input_path}")
-            
+
         try:
             with input_path.open("r", encoding="utf-8") as file:
                 content = file.read().strip()
@@ -173,7 +185,7 @@ class DatasetGenerator:
 
                 data = StudentSearchResults.model_validate_json(content)
 
-        except PermissionError as e:
+        except PermissionError:
             raise DatasetGeneratorError(
                 f"Permission denied: You do not have read access to "
                 f"'{input_path}'. Check file permissions."
@@ -182,12 +194,12 @@ class DatasetGenerator:
             raise DatasetGeneratorError(f"Invalid dataset format: {e}")
 
         return data
-    
+
     def _process_dataset(
             self, data: StudentSearchResults
     ) -> StudentSearchResultsAndAnswer:
 
-        results = []
+        results: list[MinimalAnswer] = []
 
         try:
             for search_result in tqdm(data.search_results):
@@ -196,15 +208,17 @@ class DatasetGenerator:
                     question = search_result.question
                     retrieved_sources = search_result.retrieved_sources
 
-                    answer = self.generator.generate(question, retrieved_sources)
+                    answer = self.generator.generate(
+                        question, retrieved_sources
+                    )
 
                     results.append(
-                        {
-                            "question_id": question_id,
-                            "question": question,
-                            "retrieved_sources": retrieved_sources,
-                            "answer": answer
-                        }
+                        MinimalAnswer(
+                            question_id=question_id,
+                            question=question,
+                            retrieved_sources=retrieved_sources,
+                            answer=answer
+                        )
                     )
                 except Exception as e:
                     print(
@@ -222,8 +236,11 @@ class DatasetGenerator:
             raise DatasetGeneratorError(
                 f"Critical error while processing dataset: {e}")
 
-    def _save(self, data: StudentSearchResultsAndAnswer,
-        input_path: Path, save_directory: Path
+    def _save(
+        self,
+        data: StudentSearchResultsAndAnswer,
+        input_path: Path,
+        save_directory: Path
     ) -> None:
         """Save generated dataset to a JSON file."""
         output_path = save_directory / input_path.name

@@ -36,3 +36,7 @@ packages = ["src"]
 [tool.mypy]
 strict = true
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "src.generator"
+disable_error_code = ["misc"]

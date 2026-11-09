@@ -12,11 +12,12 @@ from langchain_text_splitters import (
 from src.error_classes import IndexerError
 from src.models import Chunk
 
+
 class Indexer:
     """Build the searchable index from the source codebase."""
 
     def __init__(self, max_chunk_size: int = 2000):
-        if(
+        if (
             not isinstance(max_chunk_size, int)
             or not 1 <= max_chunk_size <= 2000
         ):
@@ -111,8 +112,10 @@ class Indexer:
         supported_extensions = {".py", ".md", ".txt"}
 
         if not self.source_directory.exists():
-            raise IndexerError(f"Source directory not found: {self.source_directory}")
-        
+            raise IndexerError(
+                f"Source directory not found: {self.source_directory}"
+            )
+
         if not self.source_directory.is_dir():
             raise IndexerError(
                 f"Path is not a directory: {self.source_directory}"
@@ -123,11 +126,14 @@ class Indexer:
                 f"Source directory does not have read permission: "
                 f"{self.source_directory}"
             )
-        
+
         found_files = []
 
         for file_path in self.source_directory.rglob("*"):
-            if file_path.is_file() and file_path.suffix.lower() in supported_extensions:
+            if (
+                file_path.is_file()
+                and file_path.suffix.lower() in supported_extensions
+            ):
                 found_files.append(file_path)
 
         return found_files
@@ -147,7 +153,7 @@ class Indexer:
 
     def _save_chunks(self, chunks: List[Dict[str, Any]]) -> None:
         """Save chunk metadata to disk."""
-        
+
         try:
             self.output_directory.mkdir(parents=True, exist_ok=True)
             output_path = self.output_directory / "chunks.json"
@@ -160,7 +166,7 @@ class Indexer:
             raise IndexerError(
                 f"Unexpected error while saving chunks "
                 f"({type(error).__name__}): {error}"
-            ) 
+            )
 
     def _build_bm25_index(self, chunks: List[Dict[str, Any]]) -> None:
         """Build and save the BM25 index."""
@@ -171,14 +177,16 @@ class Indexer:
 
         try:
             corpus = [chunk["content"] for chunk in chunks]
-            
+
             retriever = bm25s.BM25()
 
             corpus_tokens = bm25s.tokenize(corpus, show_progress=True)
             retriever.index(corpus_tokens, leave_progress=True)
             retriever.save("data/processed/bm25_index", corpus=corpus)
-            print(f"Ingestion complete! Indices saved under {"data/processed"}")
-            
+            print(
+                f"Ingestion complete! Indices saved under {"data/processed"}"
+            )
+
         except OSError as error:
             raise IndexerError(
                 f"file_path: data/processed/bm25_index, {error}")
@@ -188,13 +196,11 @@ class Indexer:
                 f"({type(error).__name__}): {error}"
             )
 
-
     def build_index(self) -> None:
         """Run the complete indexing pipeline."""
         all_chunks = []
         files = self._find_files()
 
-        #prosise
         if len(files) == 0:
             raise IndexerError(
                 f"Source directory is empty: {self.source_directory}")
@@ -206,6 +212,5 @@ class Indexer:
             except (OSError, UnicodeDecodeError) as error:
                 print(f"Skipping {file_path}: {error}")
 
-        #output
         self._save_chunks(all_chunks)
         self._build_bm25_index(all_chunks)

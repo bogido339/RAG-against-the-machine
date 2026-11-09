@@ -34,7 +34,7 @@ class RagCLI:
             self, student_search_results_path: str, save_directory: str
     ) -> None:
         """Generate and save answers from existing search results."""
-        datasetgen = DatasetGenerator()
+        datasetgen: DatasetGenerator = DatasetGenerator()
         datasetgen.answer_dataset(student_search_results_path, save_directory)
 
     def evaluate(

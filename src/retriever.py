@@ -3,9 +3,14 @@ from pathlib import Path
 from typing import Any, Dict, List
 import bm25s
 from src.error_classes import RetrieverError, DatasetRetrieverError
-from src.models import MinimalSource, RagDataset, StudentSearchResults
 from pydantic import ValidationError
-import sys
+from src.models import (
+    MinimalSource,
+    MinimalSearchResults,
+    RagDataset,
+    StudentSearchResults,
+)
+from tqdm import tqdm
 
 
 class Retriever:
@@ -38,12 +43,14 @@ class Retriever:
                 "Run: uv run python -m src index --max_chunk_size 2000"
             )
         except PermissionError:
-            raise RetrieverError("Permission denied while reading index files.")
+            raise RetrieverError(
+                "Permission denied while reading index files."
+            )
         except (json.JSONDecodeError, UnicodeError) as e:
             raise RetrieverError(f"Cannot read chunks JSON. {e}")
         except (KeyError, TypeError):
             raise RetrieverError("Invalid chunk structure.")
-        
+
     def _validate_input(self, query: str, top_k: int) -> None:
         """Validate search input and handle errors."""
         if not isinstance(query, str):
@@ -115,15 +122,17 @@ class Retriever:
                 )
         except Exception as e:
             raise RetrieverError(
-                f"An unexpected error occurred during the search operation: {e}"
+                f"An unexpected error occurred "
+                f"during the search operation: {e}"
             )
+
 
 class DatasetRetriever:
     """Search a dataset and save student search results."""
 
     def __init__(self) -> None:
         """Initialize the retriever."""
-        self.retriever = Retriever()
+        self.retriever: Retriever = Retriever()
 
     def search_dataset(
             self, dataset_path: str, save_directory: str, top_k: int = 5
@@ -138,21 +147,31 @@ class DatasetRetriever:
 
             dataset = RagDataset.model_validate(dataset)
 
-            results = []
-            for idx, query in enumerate(dataset.rag_questions, start=1):
+            results: list[MinimalSearchResults] = []
+
+            for idx, query in enumerate(
+                tqdm(
+                    dataset.rag_questions,
+                    desc="Searching questions", unit="question"
+                ), start=1
+            ):
                 try:
-                    results.append({
-                        "question_id": query.question_id,
-                        "question": query.question,
-                        "retrieved_sources": self.retriever.search(
-                            query.question, top_k
-                        ),
-                    })
+                    results.append(
+                        MinimalSearchResults(
+                            question_id=query.question_id,
+                            question=query.question,
+                            retrieved_sources=self.retriever.search(
+                                query.question, top_k
+                            )
+                        )
+                    )
+
                 except (KeyError, RetrieverError) as e:
                     print(
                         f"Warning: Skipping query #{idx} "
                         f"due to error ({type(e).__name__}): {e}"
                     )
+
                 except Exception as e:
                     raise DatasetRetrieverError(
                         f"An unexpected error occurred during "
@@ -171,7 +190,8 @@ class DatasetRetriever:
                 f"Invalid dataset structure in {dataset_path}.")
         except ValidationError:
             raise DatasetRetrieverError(
-                f"Invalid dataset JSON '{dataset_path}': Schema validation failed."
+                f"Invalid dataset JSON '{dataset_path}': "
+                "Schema validation failed."
             )
 
         output_directory = Path(save_directory)
