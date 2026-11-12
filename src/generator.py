@@ -21,15 +21,17 @@ class Qwen:
             self, model_name: str = "Qwen/Qwen3-0.6B",
             max_new_tokens: int = 1024
     ) -> None:
+        """Initialize the Qwen model, tokenizer, and token limits."""
+
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForCausalLM.from_pretrained(model_name)
 
         self.max_context_tokens = self.model.config.max_position_embeddings
         self.max_new_tokens = max_new_tokens
-        self.max_prompt_tokens = self.max_context_tokens - self.max_new_tokens
+        self.max_prompt_tokens = self.max_context_tokens - max_new_tokens
 
     def count_tokens(self, text: str) -> int:
-        """Utility to count tokens for a given text."""
+        """Count the number of tokens in the given text."""
         return len(self.tokenizer.encode(text))
 
     def generate_response(self, user_input: str) -> str:
@@ -77,6 +79,8 @@ class Generator:
     """Generate answers using retrieved context."""
 
     def __init__(self) -> None:
+        """Initialize the Qwen model and retriever components."""
+
         try:
             self.model = Qwen()
             self.retriever = Retriever()
@@ -85,6 +89,8 @@ class Generator:
                 f"Error initializing Generator components: {e}")
 
     def _load_chunks(self, sources: list[MinimalSource]) -> list[str]:
+        """Extract text chunks from the retrieved source file locations."""
+
         chunks = []
 
         for source in sources:
@@ -112,7 +118,8 @@ class Generator:
         return chunks
 
     def get_prompt(self, search_result: str, top_chunks: list[str]) -> str:
-        """Build the RAG prompt."""
+        """Build a prompt using the question and retrieved context."""
+
         context = "\n\n".join(top_chunks)
 
         return f"""Answer the question based only on this context.
@@ -126,6 +133,7 @@ Question:
 Answer:"""
 
     def generate(self, query: str, chunks: list[MinimalSource]) -> str:
+        """Generate an answer using retrieved chunks within the token limit."""
 
         loaded_chunks = self._load_chunks(chunks)
 
@@ -165,11 +173,14 @@ class DatasetGenerator:
     """Generate answers for a search-results dataset."""
 
     def __init__(self) -> None:
+        """Initialize the generator used to answer dataset questions."""
+
         self.generator: Generator = Generator()
 
     def _load_search_results(
             self, input_path: Path
     ) -> StudentSearchResults:
+        """Load and validate search results from a JSON file."""
 
         if not input_path.exists():
             raise DatasetGeneratorError(
@@ -198,13 +209,15 @@ class DatasetGenerator:
     def _process_dataset(
             self, data: StudentSearchResults
     ) -> StudentSearchResultsAndAnswer:
+        """Generate answers and build validated dataset results."""
 
         results: list[MinimalAnswer] = []
 
         try:
             for search_result in tqdm(data.search_results):
+                question_id = search_result.question_id
+
                 try:
-                    question_id = search_result.question_id
                     question = search_result.question
                     retrieved_sources = search_result.retrieved_sources
 
@@ -220,10 +233,12 @@ class DatasetGenerator:
                             answer=answer
                         )
                     )
+
                 except Exception as e:
                     print(
                         f"Warning: Failed to process question ID "
-                        f"'{question_id}'. Error: {e}")
+                        f"'{question_id}'. Error: {e}"
+                    )
 
             output = StudentSearchResultsAndAnswer(
                 search_results=results,

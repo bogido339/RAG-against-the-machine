@@ -18,7 +18,7 @@ class Indexer:
 
     def __init__(self, max_chunk_size: int = 2000):
         if (
-            not isinstance(max_chunk_size, int)
+            type(max_chunk_size) is not int
             or not 1 <= max_chunk_size <= 2000
         ):
             raise IndexerError(

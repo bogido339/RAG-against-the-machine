@@ -36,6 +36,10 @@ packages = ["src"]
 [tool.mypy]
 strict = true
 ignore_missing_imports = true
+exclude = [
+    "^data/",
+    "^\\.venv/"
+]
 
 [[tool.mypy.overrides]]
 module = "src.generator"

@@ -3,3 +3,4 @@ __pycache__
 __mypycache__
 TESTS/
 .venv/
+.mypy_cache/
