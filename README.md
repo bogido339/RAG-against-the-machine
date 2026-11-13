@@ -80,8 +80,8 @@ uv run python -m src answer "How to configure the OpenAI server?" --k 5
 
 ```bash
 uv run python -m src answer_dataset \
-  data/output/search_results/UnansweredQuestions/dataset_docs_public.json \
-  data/output/search_results_and_answer/UnansweredQuestions
+  --student_search_results_path data/output/search_results/UnansweredQuestions/dataset_docs_public.json \
+  --save_directory data/output/search_results_and_answer/UnansweredQuestions
 ```
 
 **6. Evaluate retrieval against labeled answers**

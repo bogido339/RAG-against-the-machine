@@ -21,11 +21,12 @@ class Parser:
 
         if value_type is int:
             try:
-                int(value)
+                if int(value) <= 0:
+                    raise ValueError("negative number")
             except (ValueError, TypeError):
                 raise RagError(
                     f"Invalid value '{value}' for {option}. "
-                    "Expected an integer."
+                    "Expected a positive integer."
                 ) from None
 
         elif value_type is str:

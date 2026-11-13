@@ -1,5 +1,4 @@
 import sys
-import argparse
 from src.args_parser import Parser
 
 
@@ -18,12 +17,12 @@ def main() -> None:
         )
         raise SystemExit(130)
 
-    # except Exception as error:
-    #     print(
-    #         f"ERROR: {error}",
-    #         file=sys.stderr
-    #     )
-    #     raise SystemExit(1)
+    except Exception as error:
+        print(
+            f"ERROR: {error}",
+            file=sys.stderr
+        )
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

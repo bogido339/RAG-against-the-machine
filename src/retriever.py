@@ -59,7 +59,7 @@ class Retriever:
         if not query.strip():
             raise RetrieverError("Query must not be empty.")
 
-        if not isinstance(top_k, int):
+        if type(top_k) is not int:
             raise RetrieverError("top_k must be an integer.")
 
         if top_k <= 0:
@@ -138,7 +138,7 @@ class DatasetRetriever:
             self, dataset_path: str, save_directory: str, top_k: int = 5
     ) -> None:
         """Save results inside the requested output directory."""
-        if not isinstance(top_k, int) or top_k <= 0:
+        if type(top_k) is not int or top_k <= 0:
             raise RetrieverError("top_k must be a positive integer.")
 
         try:
